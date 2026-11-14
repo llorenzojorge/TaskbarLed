@@ -7,17 +7,23 @@ namespace TaskbarLed.Platform.Windows.Windowing;
 /// <param name="WindowFound">A Claude desktop window exists.</param>
 /// <param name="VisibleFraction">Share (0..1) of that window the user can see right now.</param>
 /// <param name="Handle">The Claude window, for activation.</param>
-public readonly record struct ClaudeVisibility(bool WindowFound, double VisibleFraction, nint Handle);
+/// <param name="Editors">Every VS Code (or fork) window and how much of each is visible.</param>
+public readonly record struct ClaudeVisibility(bool WindowFound, double VisibleFraction, nint Handle, IReadOnlyList<EditorWindow> Editors)
+{
+    /// <summary>The same facts in the platform-neutral shape <see cref="SessionVisibility"/> uses.</summary>
+    public HostWindows ToHostWindows() => new(WindowFound ? VisibleFraction : 0, Editors ?? []);
+}
 
-/// <summary>Answers "can the user see Claude right now?".</summary>
+/// <summary>Answers "can the user see Claude right now?", for the desktop app and for VS Code.</summary>
 public interface IClaudeVisibilityProbe
 {
     ClaudeVisibility Check();
 }
 
 /// <summary>
-/// Finds the Claude desktop window and measures how much of it is uncovered, by walking the
-/// z-order above it. Handles minimized, cloaked (other virtual desktop), covered and snapped windows.
+/// Finds the Claude desktop window and the VS Code windows, and measures how much of each is
+/// uncovered by walking the z-order above it. Handles minimized, cloaked (other virtual desktop),
+/// covered and snapped windows.
 /// </summary>
 public sealed class ClaudeVisibilityProbe : IClaudeVisibilityProbe
 {
@@ -28,23 +34,42 @@ public sealed class ClaudeVisibilityProbe : IClaudeVisibilityProbe
         "TopLevelWindowForOverflowXamlIsland", "XamlExplorerHostIslandWindow",
     };
 
-    private readonly Dictionary<uint, bool> _isClaudeProcess = [];
+    // VS Code and the forks that run the same Claude Code extension.
+    private static readonly HashSet<string> EditorProcesses = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Code", "Code - Insiders", "VSCodium", "Cursor", "Windsurf",
+    };
+
+    private readonly Dictionary<uint, string> _processNames = [];
     private readonly uint _ownProcessId = (uint)Environment.ProcessId;
 
     public ClaudeVisibility Check()
     {
         var windows = WindowReader.InZOrder();
-        var index = windows.FindIndex(IsClaudeMainWindow);
-        if (index < 0)
+        PruneProcessCache(windows);
+        var screens = Monitors.All().Select(m => m.Bounds).ToList();
+
+        var editors = new List<EditorWindow>();
+        for (var i = 0; i < windows.Count; i++)
         {
-            PruneProcessCache(windows);
-            return new ClaudeVisibility(false, 0, 0);
+            if (IsEditorMainWindow(windows[i]))
+            {
+                editors.Add(new EditorWindow(windows[i].Title, VisibleFraction(windows, i, screens), windows[i].Handle));
+            }
         }
 
-        var claude = windows[index];
-        if (!claude.IsOnScreen)
+        var index = windows.FindIndex(IsClaudeMainWindow);
+        return index < 0
+            ? new ClaudeVisibility(false, 0, 0, editors)
+            : new ClaudeVisibility(true, VisibleFraction(windows, index, screens), windows[index].Handle, editors);
+    }
+
+    private double VisibleFraction(List<WindowInfo> windows, int index, List<PixelRect> screens)
+    {
+        var target = windows[index];
+        if (!target.IsOnScreen)
         {
-            return new ClaudeVisibility(true, 0, claude.Handle);
+            return 0;
         }
 
         var occluders = new List<PixelRect>();
@@ -52,16 +77,14 @@ public sealed class ClaudeVisibilityProbe : IClaudeVisibilityProbe
         {
             var w = windows[i];
             if (w.IsOnScreen && !w.IsToolWindow && !w.IsClickThrough
-                && w.ProcessId != _ownProcessId && w.ProcessId != claude.ProcessId
+                && w.ProcessId != _ownProcessId && w.ProcessId != target.ProcessId
                 && !ShellClasses.Contains(w.ClassName))
             {
                 occluders.Add(w.Bounds);
             }
         }
 
-        var screens = Monitors.All().Select(m => m.Bounds).ToList();
-        var fraction = OcclusionCalculator.VisibleFraction(claude.Bounds, screens, occluders);
-        return new ClaudeVisibility(true, fraction, claude.Handle);
+        return OcclusionCalculator.VisibleFraction(target.Bounds, screens, occluders);
     }
 
     // The desktop app is an Electron window titled "Claude" owned by a claude.exe process.
@@ -70,46 +93,54 @@ public sealed class ClaudeVisibilityProbe : IClaudeVisibilityProbe
         window.Title == "Claude"
         && !window.IsToolWindow
         && window.ClassName.StartsWith("Chrome_WidgetWin", StringComparison.Ordinal)
-        && IsClaudeProcess(window.ProcessId);
+        && string.Equals(ProcessName(window.ProcessId), "claude", StringComparison.OrdinalIgnoreCase);
 
-    private bool IsClaudeProcess(uint processId)
+    // VS Code is Electron too; its main windows have a title, its helper windows do not.
+    private bool IsEditorMainWindow(WindowInfo window) =>
+        window.Title.Length > 0
+        && window.IsVisible
+        && !window.IsToolWindow
+        && window.ClassName.StartsWith("Chrome_WidgetWin", StringComparison.Ordinal)
+        && EditorProcesses.Contains(ProcessName(window.ProcessId));
+
+    private string ProcessName(uint processId)
     {
-        if (_isClaudeProcess.TryGetValue(processId, out var known))
+        if (_processNames.TryGetValue(processId, out var known))
         {
             return known;
         }
 
-        bool isClaude;
+        string name;
         try
         {
             using var process = Process.GetProcessById((int)processId);
-            isClaude = string.Equals(process.ProcessName, "claude", StringComparison.OrdinalIgnoreCase);
+            name = process.ProcessName;
         }
         catch (ArgumentException)
         {
-            isClaude = false; // Process already exited.
+            name = string.Empty; // Process already exited.
         }
         catch (InvalidOperationException)
         {
-            isClaude = false;
+            name = string.Empty;
         }
 
-        _isClaudeProcess[processId] = isClaude;
-        return isClaude;
+        _processNames[processId] = name;
+        return name;
     }
 
     // Process ids get reused; forget the ones whose windows are gone.
     private void PruneProcessCache(List<WindowInfo> windows)
     {
-        if (_isClaudeProcess.Count < 512)
+        if (_processNames.Count < 512)
         {
             return;
         }
 
         var alive = windows.Select(w => w.ProcessId).ToHashSet();
-        foreach (var pid in _isClaudeProcess.Keys.Where(pid => !alive.Contains(pid)).ToList())
+        foreach (var pid in _processNames.Keys.Where(pid => !alive.Contains(pid)).ToList())
         {
-            _isClaudeProcess.Remove(pid);
+            _processNames.Remove(pid);
         }
     }
 }

@@ -25,7 +25,7 @@ internal static class Program
                 return 0;
             }
 
-            var envelope = HookEnvelope.Encode(source, DateTimeOffset.Now, payload);
+            var envelope = HookEnvelope.Encode(source, DateTimeOffset.Now, payload, CapturedEnvironment());
             if (!TrySendToPanel(envelope))
             {
                 Spool(envelope);
@@ -38,6 +38,20 @@ internal static class Program
         }
 
         return 0;
+    }
+
+    private static Dictionary<string, string> CapturedEnvironment()
+    {
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var name in HookEnvelope.CapturedVariables)
+        {
+            if (Environment.GetEnvironmentVariable(name) is { Length: > 0 } value)
+            {
+                result[name] = value;
+            }
+        }
+
+        return result;
     }
 
     // Raw bytes: hook payloads are UTF-8, and decoding through the console code page corrupts accents.

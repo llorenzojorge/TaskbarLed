@@ -20,6 +20,26 @@ public class HookEnvelopeTests
     }
 
     [Fact]
+    public void Round_trips_the_captured_environment()
+    {
+        var env = new Dictionary<string, string> { ["CLAUDE_CODE_ENTRYPOINT"] = "claude-vscode", ["TERM_PROGRAM"] = "vscode" };
+
+        var bytes = HookEnvelope.Encode("claude-code", DateTimeOffset.Now, Encoding.UTF8.GetBytes("{}"), env);
+
+        Assert.True(HookEnvelope.TryDecode(bytes, out var envelope));
+        Assert.Equal(env, envelope!.Environment);
+    }
+
+    [Fact]
+    public void Envelopes_from_older_hooks_decode_with_an_empty_environment()
+    {
+        var text = """{"v":1,"source":"claude-code","receivedAt":"2026-01-01T00:00:00Z","payload":{}}""";
+
+        Assert.True(HookEnvelope.TryDecode(Encoding.UTF8.GetBytes(text), out var envelope));
+        Assert.Empty(envelope!.Environment);
+    }
+
+    [Fact]
     public void Encode_rejects_invalid_json()
     {
         Assert.ThrowsAny<System.Text.Json.JsonException>(

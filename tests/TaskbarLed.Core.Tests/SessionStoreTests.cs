@@ -30,6 +30,19 @@ public class SessionStoreTests
     }
 
     [Fact]
+    public void AcknowledgeCompleted_can_be_limited_to_the_sessions_the_user_sees()
+    {
+        var store = new SessionStore();
+        store.Apply(new ResponseCompleted("seen", Source, At(0), null));
+        store.Apply(new ResponseCompleted("hidden", Source, At(0), null));
+
+        Assert.True(store.AcknowledgeCompleted(s => s.Id == "seen"));
+
+        Assert.Equal(SessionStatus.Idle, store.Snapshot().Single(s => s.Id == "seen").Status);
+        Assert.Equal(SessionStatus.Completed, store.Snapshot().Single(s => s.Id == "hidden").Status);
+    }
+
+    [Fact]
     public void PruneStale_drops_old_sessions_but_keeps_ones_waiting_for_the_user()
     {
         var time = new FakeTime(At(0));

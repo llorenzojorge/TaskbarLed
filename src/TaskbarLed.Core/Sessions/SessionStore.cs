@@ -53,15 +53,15 @@ public sealed class SessionStore
         }
     }
 
-    /// <summary>Marks every completed session as seen. Returns true if anything changed.</summary>
-    public bool AcknowledgeCompleted()
+    /// <summary>Marks completed sessions as seen (all of them, or those <paramref name="seen"/> accepts). Returns true if anything changed.</summary>
+    public bool AcknowledgeCompleted(Func<Session, bool>? seen = null)
     {
         var changed = false;
         lock (_gate)
         {
             foreach (var session in _sessions.Values.ToList())
             {
-                if (session.Status == SessionStatus.Completed)
+                if (session.Status == SessionStatus.Completed && (seen is null || seen(session)))
                 {
                     _sessions[session.Id] = SessionReducer.Acknowledge(session);
                     changed = true;

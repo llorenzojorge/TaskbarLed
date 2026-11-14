@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 
 namespace TaskbarLed.Sources.ClaudeCode;
@@ -33,7 +32,7 @@ public sealed class TranscriptUsageReader : ITranscriptUsageReader
 
         try
         {
-            var tail = await ReadTailAsync(transcriptPath, cancellationToken).ConfigureAwait(false);
+            var tail = await TranscriptTail.ReadAsync(transcriptPath, TailBytes, cancellationToken).ConfigureAwait(false);
             return FromJsonLines(tail);
         }
         catch (IOException)
@@ -102,25 +101,4 @@ public sealed class TranscriptUsageReader : ITranscriptUsageReader
 
     private static long Number(JsonElement element, string property) =>
         element.TryGetProperty(property, out var value) && value.TryGetInt64(out var number) ? number : 0;
-
-    private static async Task<string> ReadTailAsync(string path, CancellationToken cancellationToken)
-    {
-        await using var stream = new FileStream(
-            path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 4096, useAsync: true);
-
-        var start = Math.Max(0, stream.Length - TailBytes);
-        stream.Seek(start, SeekOrigin.Begin);
-        var buffer = new byte[stream.Length - start];
-        await stream.ReadExactlyAsync(buffer, cancellationToken).ConfigureAwait(false);
-
-        var text = Encoding.UTF8.GetString(buffer);
-        if (start > 0)
-        {
-            // We probably landed mid-line; drop the partial first line.
-            var firstNewLine = text.IndexOf('\n', StringComparison.Ordinal);
-            text = firstNewLine >= 0 ? text[(firstNewLine + 1)..] : string.Empty;
-        }
-
-        return text;
-    }
 }

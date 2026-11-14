@@ -82,6 +82,63 @@ public class SessionReducerTests
         Assert.Equal(expected, session.ContextUsage);
     }
 
+    [Fact]
+    public void Host_is_recorded_without_changing_the_status()
+    {
+        var session = Fold(
+            new HostIdentified("s1", Source, At(0), SessionHost.VsCode),
+            new PromptSubmitted("s1", Source, At(0), null, null));
+
+        Assert.Equal(SessionHost.VsCode, session.Host);
+        Assert.Equal(SessionStatus.Running, session.Status);
+    }
+
+    [Fact]
+    public void Interrupted_prompt_goes_idle_and_stops_the_timer()
+    {
+        var session = Fold(
+            new PromptSubmitted("s1", Source, At(0), null, null),
+            new ActivityStarted("s1", Source, At(2), "Editing a.cs"),
+            new PromptInterrupted("s1", Source, At(3)));
+
+        Assert.Equal(SessionStatus.Idle, session.Status);
+        Assert.Null(session.Activity);
+        Assert.Equal(TimeSpan.FromSeconds(3), session.Elapsed(At(999)));
+    }
+
+    [Fact]
+    public void Interrupting_a_pending_approval_clears_the_attention_state()
+    {
+        var session = Fold(
+            new PromptSubmitted("s1", Source, At(0), null, null),
+            new AttentionRequested("s1", Source, At(2), "Needs permission"),
+            new PromptInterrupted("s1", Source, At(5)));
+
+        Assert.Equal(SessionStatus.Idle, session.Status);
+    }
+
+    [Fact]
+    public void Interruption_older_than_the_current_prompt_is_ignored()
+    {
+        var session = Fold(
+            new PromptSubmitted("s1", Source, At(0), null, null),
+            new PromptSubmitted("s1", Source, At(10), null, null),
+            new PromptInterrupted("s1", Source, At(4)));
+
+        Assert.Equal(SessionStatus.Running, session.Status);
+        Assert.Equal(At(10), session.PromptStartedAt);
+    }
+
+    [Fact]
+    public void Interruption_does_not_touch_a_completed_session()
+    {
+        var completed = Fold(
+            new PromptSubmitted("s1", Source, At(0), null, null),
+            new ResponseCompleted("s1", Source, At(5), null));
+
+        Assert.Same(completed, SessionReducer.Apply(completed, new PromptInterrupted("s1", Source, At(6))));
+    }
+
     private static Session Fold(params SessionEvent[] events) =>
         events.Aggregate<SessionEvent, Session?>(null, SessionReducer.Apply)!;
 }

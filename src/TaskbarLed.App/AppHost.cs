@@ -12,6 +12,7 @@ using TaskbarLed.Core.Presentation;
 using TaskbarLed.Core.Sessions;
 using TaskbarLed.Core.Settings;
 using TaskbarLed.Core.Sources;
+using TaskbarLed.Core.Visibility;
 using TaskbarLed.Platform.Windows.Ipc;
 using TaskbarLed.Platform.Windows.System;
 using TaskbarLed.Platform.Windows.Windowing;
@@ -28,6 +29,8 @@ public sealed class AppHost : IDisposable
     private static readonly TimeSpan VisibilityInterval = TimeSpan.FromMilliseconds(400);
     private static readonly TimeSpan FrameInterval = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan PruneInterval = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan QuietCheckInterval = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan QuietAfter = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan HintDuration = TimeSpan.FromSeconds(6);
     private static readonly TimeSpan PreviewLinger = TimeSpan.FromSeconds(5);
 
@@ -48,13 +51,18 @@ public sealed class AppHost : IDisposable
     private readonly DispatcherTimer _visibilityTimer;
     private readonly DispatcherTimer _frameTimer;
     private readonly DispatcherTimer _pruneTimer;
+    private readonly DispatcherTimer _quietTimer;
 
     private AppSettings _settings;
     private PanelComposer _composer;
     private TrayIcon? _tray;
     private Task? _pump;
+    private EventPump? _eventPump;
+    private int _quietCheckRunning;
     private nint _claudeWindow;
-    private bool _claudeVisible;
+    private HostWindows _hostWindows = HostWindows.None;
+    private bool _allInSight;
+    private string? _selectedSessionId;
     private IReadOnlyList<MonitorInfo> _monitors = [];
     private IReadOnlyList<MonitorInfo> _targets = [];
     private Dictionary<nint, FullscreenKind> _fullscreen = [];
@@ -92,6 +100,7 @@ public sealed class AppHost : IDisposable
         _visibilityTimer = new DispatcherTimer(VisibilityInterval, DispatcherPriority.Background, (_, _) => UpdateVisibility(), Dispatcher.CurrentDispatcher);
         _frameTimer = new DispatcherTimer(FrameInterval, DispatcherPriority.Background, (_, _) => RenderFrame(), Dispatcher.CurrentDispatcher);
         _pruneTimer = new DispatcherTimer(PruneInterval, DispatcherPriority.Background, (_, _) => Prune(), Dispatcher.CurrentDispatcher);
+        _quietTimer = new DispatcherTimer(QuietCheckInterval, DispatcherPriority.Background, (_, _) => CheckQuietSessions(), Dispatcher.CurrentDispatcher);
     }
 
     public void Start()
@@ -115,6 +124,7 @@ public sealed class AppHost : IDisposable
                 new TranscriptUsageReader()),
         ];
         var pump = new EventPump(sources, _store, _log);
+        _eventPump = pump;
         _pump = Task.Run(() => pump.RunAsync(_server.Envelopes, _stop.Token));
 
         RenderFrame();
@@ -122,6 +132,7 @@ public sealed class AppHost : IDisposable
         _visibilityTimer.Start();
         _frameTimer.Start();
         _pruneTimer.Start();
+        _quietTimer.Start();
     }
 
     /// <summary>
@@ -140,6 +151,7 @@ public sealed class AppHost : IDisposable
         _visibilityTimer.Stop();
         _frameTimer.Stop();
         _pruneTimer.Stop();
+        _quietTimer.Stop();
         _hintTimer?.Stop();
         _stop.Cancel();
         _server.Stop();
@@ -179,12 +191,14 @@ public sealed class AppHost : IDisposable
 
         var sessions = _store.Snapshot();
         var now = DateTimeOffset.Now;
-        _viewModel.Apply(_composer.Compose(sessions, now));
+        var frame = _composer.Compose(sessions, now);
+        _selectedSessionId = frame.SelectedSessionId;
+        _viewModel.Apply(frame);
         _tray?.SetStatus(sessions.Count == 0 ? SessionStatus.Idle : sessions.Max(s => s.Status));
 
         // Alerts are only for full-screen moments: everywhere else the panel already tells the story.
         var alerts = _alerts.Detect(sessions, now);
-        if (alerts.Count == 0 || _claudeVisible
+        if (alerts.Count == 0 || _allInSight
             || _settings.Panel.Fullscreen is not (FullscreenBehavior.EdgeAndToast or FullscreenBehavior.ToastOnly))
         {
             return;
@@ -210,16 +224,18 @@ public sealed class AppHost : IDisposable
         {
             var claude = _probe.Check();
             _claudeWindow = claude.Handle;
-            _claudeVisible = claude.WindowFound && claude.VisibleFraction >= _settings.Panel.VisibleThreshold;
+            _hostWindows = claude.ToHostWindows();
+            var threshold = _settings.Panel.VisibleThreshold;
+            _allInSight = !SessionVisibility.AnyOutOfSight(_store.Snapshot(), _hostWindows, threshold);
 
-            // Opening Claude is how the user "sees" a finished session: stop blinking, drop alerts.
-            if (_claudeVisible)
+            // Opening the session's app (Claude or VS Code) is how the user "sees" it finished: stop blinking.
+            if (_store.AcknowledgeCompleted(s => SessionVisibility.IsInSight(s, _hostWindows, threshold)))
             {
-                if (_store.AcknowledgeCompleted())
-                {
-                    RenderFrame();
-                }
+                RenderFrame();
+            }
 
+            if (_allInSight)
+            {
                 _overlays.DismissAlerts();
             }
 
@@ -229,12 +245,12 @@ public sealed class AppHost : IDisposable
             _targets = PanelManager.Targets(_monitors, panel);
             _fullscreen = _targets.ToDictionary(m => m.Handle, FullscreenDetector.Detect);
 
-            var shouldShow = !_claudeVisible && (_viewModel.HasActivity || !panel.HideWhenIdle);
+            var shouldShow = !_allInSight && (_viewModel.HasActivity || !panel.HideWhenIdle);
             var preview = _menuOpen || DateTimeOffset.Now < _previewUntil;
             _panels.Sync(_targets, _fullscreen, shouldShow, preview);
 
             var glow = panel.Fullscreen == FullscreenBehavior.EdgeAndToast
-                && !_claudeVisible
+                && !_allInSight
                 && (_viewModel.IsBlinking || _viewModel.NeedsAttention);
             _overlays.SyncEdges(
                 glow ? [.. _targets.Where(m => _fullscreen[m.Handle] == FullscreenKind.Borderless)] : [],
@@ -269,6 +285,27 @@ public sealed class AppHost : IDisposable
         _settingsStore.Save(_settings);
     }
 
+    // Reads transcripts off the UI thread; skips a tick while the previous check is still running.
+    private void CheckQuietSessions()
+    {
+        if (_eventPump is not { } pump || Interlocked.Exchange(ref _quietCheckRunning, 1) == 1)
+        {
+            return;
+        }
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await pump.CheckQuietSessionsAsync(QuietAfter, _stop.Token).ConfigureAwait(false);
+            }
+            finally
+            {
+                Volatile.Write(ref _quietCheckRunning, 0);
+            }
+        });
+    }
+
     private void Prune()
     {
         if (_store.PruneStale(TimeSpan.FromHours(_settings.Panel.StaleSessionHours)))
@@ -296,9 +333,16 @@ public sealed class AppHost : IDisposable
         _viewModel.Uppercase = ThemeCatalog.Resolve(id).Uppercase;
     }
 
+    // Opens the app of the session in the feed: VS Code for a VS Code session, Claude otherwise.
     private void OpenClaude()
     {
-        if (_claudeWindow != 0)
+        var selected = _store.Snapshot().FirstOrDefault(s => s.Id == _selectedSessionId);
+        if (selected is { Host: SessionHost.VsCode }
+            && SessionVisibility.EditorFor(selected, _hostWindows.Editors) is { } editor)
+        {
+            WindowActions.Activate(editor.Handle);
+        }
+        else if (_claudeWindow != 0)
         {
             WindowActions.Activate(_claudeWindow);
         }

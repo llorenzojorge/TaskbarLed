@@ -30,6 +30,17 @@ public sealed record AttentionRequested(string SessionId, string SourceId, DateT
 public sealed record ResponseCompleted(string SessionId, string SourceId, DateTimeOffset Timestamp, string? LastMessage)
     : SessionEvent(SessionId, SourceId, Timestamp);
 
+/// <summary>
+/// The user stopped the prompt (Esc, stop button). Agents usually report no "finished" event for this,
+/// so sources detect it on their own; <see cref="Timestamp"/> is when the interruption happened.
+/// </summary>
+public sealed record PromptInterrupted(string SessionId, string SourceId, DateTimeOffset Timestamp)
+    : SessionEvent(SessionId, SourceId, Timestamp);
+
+/// <summary>The source learned which app the session runs in.</summary>
+public sealed record HostIdentified(string SessionId, string SourceId, DateTimeOffset Timestamp, SessionHost Host)
+    : SessionEvent(SessionId, SourceId, Timestamp);
+
 /// <summary>A new measurement of how full the context window is (0..1).</summary>
 public sealed record ContextUsageMeasured(string SessionId, string SourceId, DateTimeOffset Timestamp, double Usage)
     : SessionEvent(SessionId, SourceId, Timestamp);

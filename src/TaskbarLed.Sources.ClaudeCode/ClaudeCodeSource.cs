@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using TaskbarLed.Core.Sessions;
 using TaskbarLed.Core.Sources;
@@ -14,25 +15,58 @@ public sealed class ClaudeCodeSource : ISessionSource
 
     private readonly ToolActivityFormatter _formatter;
     private readonly ITranscriptUsageReader _usageReader;
-
-    public ClaudeCodeSource(ToolActivityFormatter formatter, ITranscriptUsageReader usageReader)
+    private readonly ITranscriptInterruptionReader _interruptionReader;
+    private readonly ConcurrentDictionary<string, string> _transcripts = new(StringComparer.Ordinal);
+    public ClaudeCodeSource(
+        ToolActivityFormatter formatter,
+        ITranscriptUsageReader usageReader,
+        ITranscriptInterruptionReader? interruptionReader = null)
     {
         _formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
         _usageReader = usageReader ?? throw new ArgumentNullException(nameof(usageReader));
+        _interruptionReader = interruptionReader ?? new TranscriptInterruptionReader();
     }
 
     public string SourceId => Id;
 
+    /// <summary>Claude Code has no hook for an interrupted prompt; the transcript tells.</summary>
+    public async ValueTask<IReadOnlyList<SessionEvent>> CheckQuietSessionsAsync(
+        IReadOnlyList<Session> quietSessions,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(quietSessions);
+
+        var events = new List<SessionEvent>();
+        foreach (var session in quietSessions)
+        {
+            if (_transcripts.TryGetValue(session.Id, out var path)
+                && await _interruptionReader.ReadInterruptionAsync(path, cancellationToken).ConfigureAwait(false) is { } at)
+            {
+                events.Add(new PromptInterrupted(session.Id, Id, at));
+            }
+        }
+
+        return events;
+    }
+
     public async ValueTask<IReadOnlyList<SessionEvent>> TranslateAsync(
         JsonElement payload,
         DateTimeOffset receivedAt,
+        IReadOnlyDictionary<string, string> environment,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(environment);
+
         if (payload.ValueKind != JsonValueKind.Object
             || Text(payload, "session_id") is not { } sessionId
             || Text(payload, "hook_event_name") is not { } hookEvent)
         {
             return [];
+        }
+
+        if (Text(payload, "transcript_path") is { Length: > 0 } transcript)
+        {
+            _transcripts[sessionId] = transcript;
         }
 
         var project = ProjectName(Text(payload, "cwd"));
@@ -77,13 +111,47 @@ public sealed class ClaudeCodeSource : ISessionSource
 
             case "SessionEnd":
                 events.Add(new SessionEnded(sessionId, Id, receivedAt));
-                break;
+                _transcripts.TryRemove(sessionId, out _);
+                return events;
 
             default:
                 break;
         }
 
+        // Alongside every real event, so a session the panel pruned and sees again still knows its app.
+        var host = HostOf(environment);
+        if (events.Count > 0 && host != SessionHost.Unknown)
+        {
+            events.Insert(0, new HostIdentified(sessionId, Id, receivedAt, host));
+        }
+
         return events;
+    }
+
+    /// <summary>
+    /// Claude Code tells its hooks where it runs in <c>CLAUDE_CODE_ENTRYPOINT</c> ("claude-desktop",
+    /// "claude-vscode", "cli"...). A CLI started in VS Code's integrated terminal says "cli", but the
+    /// terminal sets <c>TERM_PROGRAM=vscode</c>, and VS Code is the window to watch then.
+    /// </summary>
+    public static SessionHost HostOf(IReadOnlyDictionary<string, string> environment)
+    {
+        ArgumentNullException.ThrowIfNull(environment);
+
+        var entrypoint = environment.GetValueOrDefault("CLAUDE_CODE_ENTRYPOINT") ?? string.Empty;
+        var terminal = environment.GetValueOrDefault("TERM_PROGRAM") ?? string.Empty;
+
+        if (entrypoint.Contains("desktop", StringComparison.OrdinalIgnoreCase))
+        {
+            return SessionHost.ClaudeDesktop;
+        }
+
+        if (entrypoint.Contains("vscode", StringComparison.OrdinalIgnoreCase)
+            || terminal.Equals("vscode", StringComparison.OrdinalIgnoreCase))
+        {
+            return SessionHost.VsCode;
+        }
+
+        return entrypoint.Equals("cli", StringComparison.OrdinalIgnoreCase) ? SessionHost.Terminal : SessionHost.Unknown;
     }
 
     // "Claude is waiting for your input" fires after a finished turn sits idle: not a new request.

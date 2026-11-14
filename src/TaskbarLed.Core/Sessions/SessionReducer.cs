@@ -14,6 +14,15 @@ public static class SessionReducer
             return null;
         }
 
+        // Only a prompt still in flight can be interrupted, and not by a stop older than the prompt
+        // (the check that found it may race with a new prompt).
+        if (evt is PromptInterrupted
+            && (current is not { Status: SessionStatus.Running or SessionStatus.AwaitingInput }
+                || evt.Timestamp < current.PromptStartedAt))
+        {
+            return current;
+        }
+
         var session = (current ?? Session.Create(evt.SessionId, evt.SourceId, evt.Timestamp))
             with { LastUpdated = evt.Timestamp };
 
@@ -50,6 +59,16 @@ public static class SessionReducer
                 LastMessage = e.LastMessage ?? session.LastMessage,
                 Activity = null,
             },
+
+            // The user stopped it themselves, so there is nothing new to look at: idle, not completed.
+            PromptInterrupted e => session with
+            {
+                Status = SessionStatus.Idle,
+                PromptEndedAt = e.Timestamp,
+                Activity = null,
+            },
+
+            HostIdentified e => session with { Host = e.Host },
 
             ContextUsageMeasured e => session with { ContextUsage = Math.Clamp(e.Usage, 0d, 1d) },
 

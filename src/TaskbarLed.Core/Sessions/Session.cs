@@ -12,6 +12,7 @@ namespace TaskbarLed.Core.Sessions;
 /// <param name="LastMessage">Last text the agent wrote, if known.</param>
 /// <param name="ContextUsage">Fraction (0..1) of the context window in use, if known.</param>
 /// <param name="LastUpdated">Timestamp of the last event applied.</param>
+/// <param name="Host">The app the session runs in, which decides what "Claude is in sight" means for it.</param>
 public sealed record Session(
     string Id,
     string SourceId,
@@ -23,7 +24,8 @@ public sealed record Session(
     string? Activity,
     string? LastMessage,
     double? ContextUsage,
-    DateTimeOffset LastUpdated)
+    DateTimeOffset LastUpdated,
+    SessionHost Host = SessionHost.Unknown)
 {
     /// <summary>Best label to identify the session on a tiny display.</summary>
     public string DisplayName =>
