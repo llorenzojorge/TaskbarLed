@@ -50,6 +50,10 @@ public class HookEnvelopeTests
     [InlineData("garbage")]
     [InlineData("""{"v":1,"source":"x","receivedAt":"2026-01-01T00:00:00Z"}""")]
     [InlineData("""{"v":99,"source":"x","receivedAt":"2026-01-01T00:00:00Z","payload":{}}""")]
+    [InlineData("""{"v":"1","source":"x","receivedAt":"2026-01-01T00:00:00Z","payload":{}}""")]
+    [InlineData("""{"v":1,"source":5,"receivedAt":"2026-01-01T00:00:00Z","payload":{}}""")]
+    [InlineData("""{"v":1,"source":"x","receivedAt":20260101,"payload":{}}""")]
+    [InlineData("""[1,2,3]""")]
     public void Decode_rejects_malformed_or_future_envelopes(string text)
     {
         Assert.False(HookEnvelope.TryDecode(Encoding.UTF8.GetBytes(text), out _));

@@ -74,9 +74,12 @@ public sealed record HookEnvelope(
             var root = document.RootElement;
 
             if (root.ValueKind != JsonValueKind.Object
-                || !root.TryGetProperty("v", out var version) || !version.TryGetInt32(out var v) || v > CurrentVersion
-                || !root.TryGetProperty("source", out var source) || source.GetString() is not { Length: > 0 } sourceId
-                || !root.TryGetProperty("receivedAt", out var receivedAt) || !receivedAt.TryGetDateTimeOffset(out var at)
+                || !root.TryGetProperty("v", out var version) || version.ValueKind != JsonValueKind.Number
+                || !version.TryGetInt32(out var v) || v > CurrentVersion
+                || !root.TryGetProperty("source", out var source) || source.ValueKind != JsonValueKind.String
+                || source.GetString() is not { Length: > 0 } sourceId
+                || !root.TryGetProperty("receivedAt", out var receivedAt) || receivedAt.ValueKind != JsonValueKind.String
+                || !receivedAt.TryGetDateTimeOffset(out var at)
                 || !root.TryGetProperty("payload", out var payload))
             {
                 return false;

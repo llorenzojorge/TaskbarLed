@@ -112,6 +112,40 @@ public sealed class ClaudeCodeHookInstallerTests : IDisposable
         Assert.Equal("{ this is not json", File.ReadAllText(_settings));
     }
 
+    [Theory]
+    [InlineData(@"C:\Tools\$(calc)\TaskbarLed.Hook.exe")]
+    [InlineData(@"C:\Tools\`calc`\TaskbarLed.Hook.exe")]
+    [InlineData("/opt/task\"bar/TaskbarLed.Hook")]
+    public void Refuses_an_install_path_a_shell_would_interpret(string hookExe)
+    {
+        var installer = new ClaudeCodeHookInstaller(_settings, hookExe);
+
+        Assert.Throws<InvalidOperationException>(installer.Install);
+        Assert.False(File.Exists(_settings));
+    }
+
+    [Fact]
+    public void A_symlinked_settings_file_stays_a_link_and_its_target_gets_the_hooks()
+    {
+        Directory.CreateDirectory(_dir);
+        var target = Path.Combine(_dir, "dotfiles-settings.json");
+        File.WriteAllText(target, """{ "model": "opus" }""");
+        try
+        {
+            File.CreateSymbolicLink(_settings, target);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return; // Windows without developer mode cannot create links; CI on macOS covers this.
+        }
+
+        _installer.Install();
+
+        Assert.NotNull(new FileInfo(_settings).LinkTarget);
+        Assert.NotNull(JsonNode.Parse(File.ReadAllText(target))!["hooks"]);
+        Assert.True(_installer.IsInstalled());
+    }
+
     private void Write(string json)
     {
         Directory.CreateDirectory(_dir);

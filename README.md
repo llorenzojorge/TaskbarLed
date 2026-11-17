@@ -150,7 +150,7 @@ Claude Code hook ──stdin──▶ TaskbarLed.Hook.exe ──named pipe──
 
 Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
 
-**Privacy:** TaskbarLed makes no network requests. Events travel over a named pipe that only your Windows user can open.
+**Privacy:** TaskbarLed makes no network requests. Events travel over a named pipe that only your Windows user can open. What it reads and writes, and how to report a vulnerability, is in [SECURITY.md](SECURITY.md).
 
 ## Limitations
 

@@ -85,7 +85,7 @@ Saídas externas, com **luzes físicas**: teclado RGB e fita LED (via OpenRGB), 
 3. O que a CI não cobre (Dock, Spaces, detecção da janela do Claude, auto-start) precisa de um Mac real: alguém da comunidade, ou um Mac alugado na nuvem por algumas horas.
 
 **Etapas:**
-1. *(feito; o job de macOS ainda não rodou no GitHub)* Painel flutuante em Avalonia com dados de demonstração, `PanelLayout.AboveDock`, `TaskbarLed.Platform.Mac` (caminhos, LaunchAgent, visibilidade do Claude, Spaces), teste headless com imagem e job de macOS na CI.
+1. *(feito; o job de macOS passa na CI desde 2026-11-14)* Painel flutuante em Avalonia com dados de demonstração, `PanelLayout.AboveDock`, `TaskbarLed.Platform.Mac` (caminhos, LaunchAgent, visibilidade do Claude, Spaces), teste headless com imagem e job de macOS na CI.
 2. Ligar os eventos reais: servidor de socket Unix, spool e `ClaudeCodeSource`, configurações e log.
 3. Menu no painel (idioma, tema, iniciar com o sistema, conectar ao Claude Code) e os outros temas.
 4. Validar num Mac real.

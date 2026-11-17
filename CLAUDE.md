@@ -40,6 +40,39 @@ Other CLI flags: `--install-hooks`, `--uninstall-hooks`, `--restart` (wait for t
 
 Release: push a tag `vX.Y.Z`; `.github/workflows/release.yml` builds, tests and attaches `TaskbarLed-win-x64.zip`. Repo: github.com/llorenzojorge/TaskbarLed.
 
+## Running a dev build safely
+
+- **A dev build takes over the maintainer's install.** On a normal start (`dotnet run --project src/TaskbarLed.App`, or the Debug exe without flags), `AppHost.Start` repairs auto-start and hooks to point at *the exe that is running*: the `Run` value and every hook command in `~/.claude/settings.json` end up pointing into `bin/Debug`. After such a run, start the installed copy again (it repairs both back). `--render-demo`, `--install-hooks`, `--uninstall-hooks` and `--exit` return before that and are safe.
+- **Single instance.** While the installed copy runs, a second start exits silently (mutex `Local\TaskbarLed.SingleInstance`). Run `--exit` on the installed copy first.
+- **Feed it fake events** instead of waiting for real ones: pipe a hook payload into the hook exe. `session_id` and `hook_event_name` are required; `cwd` gives the tab name. Events: `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `Notification`, `Stop`, `SessionEnd`.
+
+  ```powershell
+  '{"session_id":"demo-1","hook_event_name":"UserPromptSubmit","cwd":"C:\\work\\webapp"}' | & src/TaskbarLed.Hook/bin/Debug/net10.0/TaskbarLed.Hook.exe claude-code
+  '{"session_id":"demo-1","hook_event_name":"Stop","cwd":"C:\\work\\webapp","last_assistant_message":"Done."}' | & src/TaskbarLed.Hook/bin/Debug/net10.0/TaskbarLed.Hook.exe claude-code
+  ```
+
+  The panel only shows while the session's app is out of sight; a fake session has no captured environment, so it follows the Claude window.
+- **`TaskbarLed.App` has no tests** (windows, tray, `AppHost` wiring). Put decisions in Core where they can be tested; check the rest with `--render-demo` (visuals) and fake events (behavior).
+- **Where the agent runs matters.** A session in VS Code or a plain terminal is *not* inside the Claude desktop app's MSIX container: `%APPDATA%`, `%LOCALAPPDATA%` and `HKCU` are the real ones, and `Start-Process` works directly. The redirection gotcha below applies to sessions in the Claude desktop app.
+
+## Status
+
+- Released: `v1.1.0` (Windows x64, framework-dependent, unsigned).
+- Versions: `MAJOR.MINOR.PATCH`. PATCH for fixes, MINOR for new features, and 2.0 only for a real new generation of the app. The tag is the version: the release workflow stamps it into the binaries and publishes a SHA-256 next to the zip. Local builds say `0.0.0-dev`. (v1.0.0 and v1.1.0 were built before this and say 1.0.0.)
+- Supported: Windows 10 and 11. Tested by hand only on the maintainer's Windows 11; Windows 10, a taskbar on another edge and ARM64 are not verified.
+- macOS: step 1 of P4 is done and CI's `macos` job passes (pure tests, headless render, `osx-arm64` publish). No live events, menu, settings or release artifact yet. The maintainer has no Mac, so nothing has run on a real one.
+
+## Security rules
+
+The threat model and what users are promised are in [SECURITY.md](SECURITY.md); keep it true when behavior changes.
+
+- **Payloads, spool files, settings and themes are untrusted input.** Check the JSON value kind before reading a value (`GetString()` on a number throws `InvalidOperationException`, which a `catch (JsonException)` misses). Nothing read at startup may throw out of `AppHost.Start`: one bad spool file would stop the panel from starting, every time.
+- **The hook checks who owns the pipe before writing** (`IsOurPanel`): pipe names are machine-wide and another account could create ours first. Do not swap it for `PipeOptions.CurrentUserOnly`: that compares against the token's default owner, which on the maintainer's machine is Administrators for the panel and the user for the hook, so every event went to the spool. After touching the hook or the server, send fake events and check that the spool folder stays empty.
+- **Only open paths the app chose, or validated ones.** Transcript paths come from payloads: `TranscriptTail.IsLocalTranscript` refuses network and non-`.jsonl` paths (a UNC path would send the user's Windows credentials to that server).
+- **Start processes by full path** (`explorer.exe` from the Windows folder). A bare name is also searched in the current directory, which can be a project an agent is working in.
+- **The hook command is run by a shell.** `ClaudeCodeHookInstaller` refuses an install path containing `"`, `$` or a backtick.
+- **No network, no credentials, no payload contents in the log.**
+
 ## Conventions
 
 - Warnings are errors with the .NET analyzers on. Fix them; suppress only with a written justification.

@@ -25,7 +25,7 @@ public sealed class TranscriptUsageReader : ITranscriptUsageReader
 
     public async ValueTask<double?> ReadContextUsageAsync(string transcriptPath, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(transcriptPath) || !File.Exists(transcriptPath))
+        if (!TranscriptTail.IsLocalTranscript(transcriptPath) || !File.Exists(transcriptPath))
         {
             return null;
         }

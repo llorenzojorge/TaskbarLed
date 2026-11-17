@@ -1,5 +1,7 @@
 <Project>
   <PropertyGroup>
+    <!-- Local builds. A release takes its version from the tag (.github/workflows/release.yml). -->
+    <Version>0.0.0-dev</Version>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

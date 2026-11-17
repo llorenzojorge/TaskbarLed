@@ -150,7 +150,7 @@ Hook do Claude Code ──stdin──▶ TaskbarLed.Hook.exe ──named pipe─
 
 O desenho completo está em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), em inglês.
 
-**Privacidade:** o TaskbarLed não faz nenhuma requisição de rede. Os eventos trafegam por um named pipe que só o seu usuário do Windows consegue abrir.
+**Privacidade:** o TaskbarLed não faz nenhuma requisição de rede. Os eventos trafegam por um named pipe que só o seu usuário do Windows consegue abrir. O que ele lê e grava, e como relatar uma vulnerabilidade, está no [SECURITY.md](SECURITY.md) (em inglês).
 
 ## Limitações
 

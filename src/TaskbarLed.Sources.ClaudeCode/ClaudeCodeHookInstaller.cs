@@ -27,7 +27,12 @@ public sealed class ClaudeCodeHookInstaller
 
     private static readonly JsonSerializerOptions WriteOptions = new() { WriteIndented = true };
 
+    // Claude Code hands the hook command to a shell. Inside the double quotes we write, these still mean
+    // something to bash or PowerShell: a folder named with them could run a command of its own.
+    private static readonly char[] ShellCharacters = ['"', '$', '`'];
+
     private readonly string _settingsPath;
+    private readonly string _hookExecutablePath;
     private readonly string _hookCommand;
 
     /// <param name="settingsPath">Claude Code user settings file.</param>
@@ -37,6 +42,7 @@ public sealed class ClaudeCodeHookInstaller
         ArgumentException.ThrowIfNullOrWhiteSpace(settingsPath);
         ArgumentException.ThrowIfNullOrWhiteSpace(hookExecutablePath);
         _settingsPath = settingsPath;
+        _hookExecutablePath = hookExecutablePath;
         _hookCommand = $"\"{hookExecutablePath}\" {ClaudeCodeSource.Id}";
     }
 
@@ -67,8 +73,17 @@ public sealed class ClaudeCodeHookInstaller
     }
 
     /// <summary>Adds our hooks (replacing older copies of them, e.g. from a previous install path).</summary>
+    /// <exception cref="InvalidOperationException">
+    /// The settings file is not valid JSON, or the app sits in a folder whose name a shell would interpret.
+    /// </exception>
     public void Install()
     {
+        if (_hookExecutablePath.IndexOfAny(ShellCharacters) >= 0)
+        {
+            throw new InvalidOperationException(
+                $"TaskbarLed is in a folder whose name contains a quote, $ or backtick ({_hookExecutablePath}). Move it to a folder without those characters.");
+        }
+
         var root = Load() ?? [];
         var hooks = root["hooks"] as JsonObject ?? [];
         root["hooks"] = hooks;
@@ -191,9 +206,13 @@ public sealed class ClaudeCodeHookInstaller
             File.Copy(_settingsPath, backup);
         }
 
-        // Write-then-replace so Claude Code never reads a half-written settings file.
-        var temp = _settingsPath + ".taskbarled.tmp";
+        // Write-then-replace so Claude Code never reads a half-written settings file. When the file is a
+        // symbolic link (dotfiles kept in a repository), replace what it points to and keep the link.
+        var target = File.Exists(_settingsPath)
+            ? File.ResolveLinkTarget(_settingsPath, returnFinalTarget: true)?.FullName ?? _settingsPath
+            : _settingsPath;
+        var temp = target + ".taskbarled.tmp";
         File.WriteAllText(temp, root.ToJsonString(WriteOptions));
-        File.Move(temp, _settingsPath, overwrite: true);
+        File.Move(temp, target, overwrite: true);
     }
 }

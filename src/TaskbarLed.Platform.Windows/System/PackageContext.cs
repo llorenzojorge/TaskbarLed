@@ -76,7 +76,10 @@ public static class PackageContext
             File.WriteAllText(marker.FullName, string.Empty);
 
             // explorer.exe hands the path to the running shell, which starts it outside the container.
-            using var shell = Process.Start(new ProcessStartInfo("explorer.exe") { ArgumentList = { executablePath }, UseShellExecute = false });
+            // Full path: a bare name is also looked up in the current directory, which here can be a
+            // project folder an agent is working in.
+            var explorer = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe");
+            using var shell = Process.Start(new ProcessStartInfo(explorer) { ArgumentList = { executablePath }, UseShellExecute = false });
             return shell is not null;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or global::System.ComponentModel.Win32Exception)

@@ -1,4 +1,6 @@
 ﻿using System.IO.Pipes;
+using System.Runtime.Versioning;
+using System.Security.Principal;
 using TaskbarLed.Core.Ipc;
 
 namespace TaskbarLed.Hook;
@@ -86,8 +88,15 @@ internal static class Program
 
         try
         {
-            using var pipe = new NamedPipeClientStream(".", IpcEndpoints.PipeName, PipeDirection.Out);
+            using var pipe = OperatingSystem.IsWindows()
+                ? OpenForOwnerCheck()
+                : new NamedPipeClientStream(".", IpcEndpoints.PipeName, PipeDirection.Out, PipeOptions.CurrentUserOnly);
             pipe.Connect(IpcEndpoints.ConnectTimeout);
+            if (OperatingSystem.IsWindows() && !IsOurPanel(pipe))
+            {
+                return false;
+            }
+
             pipe.Write(envelope);
             pipe.Flush();
             return true;
@@ -97,6 +106,34 @@ internal static class Program
             return false;
         }
     }
+
+    /// <summary>
+    /// Pipe names are machine-wide: another account could create a pipe with our name before the panel
+    /// starts and receive every payload (prompts, commands, replies). Only write to a pipe created by this
+    /// user. A pipe owned by Administrators or SYSTEM is accepted as well: that is the panel started
+    /// elevated, and those accounts can read this user's data anyway. <c>PipeOptions.CurrentUserOnly</c>
+    /// is not used because it compares against the token's default owner, which differs between an
+    /// elevated panel and a normal hook, and would send every event to the spool.
+    /// </summary>
+    [SupportedOSPlatform("windows")]
+    private static bool IsOurPanel(NamedPipeClientStream pipe)
+    {
+        using var me = WindowsIdentity.GetCurrent();
+        return pipe.GetAccessControl().GetOwner(typeof(SecurityIdentifier)) is SecurityIdentifier owner
+            && ((me.User is { } user && owner.Equals(user))
+                || owner.IsWellKnown(WellKnownSidType.BuiltinAdministratorsSid)
+                || owner.IsWellKnown(WellKnownSidType.LocalSystemSid));
+    }
+
+    // Write-only, plus ReadPermissions so the owner can be read before anything is written.
+    [SupportedOSPlatform("windows")]
+    private static NamedPipeClientStream OpenForOwnerCheck() => new(
+        ".",
+        IpcEndpoints.PipeName,
+        PipeAccessRights.WriteData | PipeAccessRights.ReadPermissions,
+        PipeOptions.None,
+        TokenImpersonationLevel.None,
+        HandleInheritability.None);
 
     private static void Spool(byte[] envelope)
     {

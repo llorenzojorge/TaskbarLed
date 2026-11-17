@@ -22,7 +22,7 @@ public sealed class TranscriptInterruptionReader : ITranscriptInterruptionReader
 
     public async ValueTask<DateTimeOffset?> ReadInterruptionAsync(string transcriptPath, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(transcriptPath) || !File.Exists(transcriptPath))
+        if (!TranscriptTail.IsLocalTranscript(transcriptPath) || !File.Exists(transcriptPath))
         {
             return null;
         }

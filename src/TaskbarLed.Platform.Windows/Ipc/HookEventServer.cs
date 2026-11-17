@@ -46,12 +46,13 @@ public sealed class HookEventServer : IAsyncDisposable
         var spools = SpoolDirectories().Where(d => d.Exists).ToList();
 
         // File names start with a UTC timestamp, so name order is arrival order across folders too.
-        var files = spools.SelectMany(d => d.EnumerateFiles("*.json")).OrderBy(f => f.Name, StringComparer.Ordinal).ToList();
+        var files = spools.SelectMany(d => FilesOf(d, "*.json")).OrderBy(f => f.Name, StringComparer.Ordinal).ToList();
         foreach (var file in files)
         {
             try
             {
                 if (DateTime.UtcNow - file.CreationTimeUtc < SpoolMaxAge
+                    && file.Length <= MaxMessageBytes
                     && HookEnvelope.TryDecode(File.ReadAllBytes(file.FullName), out var envelope))
                 {
                     _channel.Writer.TryWrite(envelope!);
@@ -59,21 +60,34 @@ public sealed class HookEventServer : IAsyncDisposable
 
                 file.Delete();
             }
-            catch (IOException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 // The hook may still be renaming it; it will be picked up on the next start.
             }
         }
 
-        foreach (var orphan in spools.SelectMany(d => d.EnumerateFiles("*.tmp")).Where(f => DateTime.UtcNow - f.CreationTimeUtc > SpoolMaxAge))
+        foreach (var orphan in spools.SelectMany(d => FilesOf(d, "*.tmp")).Where(f => DateTime.UtcNow - f.CreationTimeUtc > SpoolMaxAge))
         {
             try
             {
                 orphan.Delete();
             }
-            catch (IOException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
             }
+        }
+    }
+
+    // A spool folder that cannot be listed is skipped: replaying old events must never stop the panel from starting.
+    private static List<FileInfo> FilesOf(DirectoryInfo directory, string pattern)
+    {
+        try
+        {
+            return [.. directory.EnumerateFiles(pattern)];
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return [];
         }
     }
 

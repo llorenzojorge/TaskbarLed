@@ -73,6 +73,32 @@ public class TranscriptUsageReaderTests
     }
 
     [Fact]
+    public async Task Only_a_jsonl_file_is_opened()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"taskbarled-{Guid.NewGuid():N}.txt");
+        try
+        {
+            await File.WriteAllTextAsync(path, User + "\n" + Assistant(0, 100_000, 0) + "\n");
+
+            Assert.Null(await new TranscriptUsageReader().ReadContextUsageAsync(path, CancellationToken.None));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Theory]
+    [InlineData(@"\\server\share\transcript.jsonl")]
+    [InlineData("//server/share/transcript.jsonl")]
+    [InlineData(@"relative\transcript.jsonl")]
+    public async Task Network_and_relative_paths_are_never_opened(string path)
+    {
+        Assert.Null(await new TranscriptUsageReader().ReadContextUsageAsync(path, CancellationToken.None));
+        Assert.Null(await new TranscriptInterruptionReader().ReadInterruptionAsync(path, CancellationToken.None));
+    }
+
+    [Fact]
     public async Task Missing_file_gives_null()
     {
         Assert.Null(await new TranscriptUsageReader().ReadContextUsageAsync(@"C:\nope\missing.jsonl", CancellationToken.None));
