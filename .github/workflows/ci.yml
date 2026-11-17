@@ -30,7 +30,7 @@ jobs:
       - name: Publish app
         run: dotnet publish src/TaskbarLed.App -c Release -o artifacts/TaskbarLed
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: TaskbarLed
           path: artifacts/TaskbarLed
@@ -63,12 +63,12 @@ jobs:
       - name: Build hook
         run: dotnet build src/TaskbarLed.Hook -c Release
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: TaskbarLed-macos-screenshots
           path: artifacts/screenshots
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: TaskbarLed-osx-arm64
           path: artifacts/TaskbarLed-osx-arm64
