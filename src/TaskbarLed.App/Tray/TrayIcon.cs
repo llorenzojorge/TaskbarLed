@@ -23,6 +23,9 @@ public sealed record TrayCommands(
     Action<PanelPlacement> SelectPlacement,
     Action<FullscreenBehavior> SelectFullscreen,
     Action<string> SelectTheme,
+    Action ToggleSoundOnDone,
+    Action ToggleSoundOnAttention,
+    Action<SoundStyle> SelectSoundStyle,
     Action<string> SelectLanguage,
     Action ToggleHideWhenIdle,
     Action ToggleStartWithWindows,
@@ -166,6 +169,7 @@ public sealed class TrayIcon : IDisposable
 
         KeepOpenOnPick(themeMenu);
         _menu.Items.Add(themeMenu);
+        _menu.Items.Add(SoundMenu(state.Panel));
 
         // Language names are written in their own language so anyone can find theirs.
         var languageMenu = new ToolStripMenuItem(_strings.Language);
@@ -203,6 +207,49 @@ public sealed class TrayIcon : IDisposable
         _menu.Items.Add(new ToolStripMenuItem(_strings.Exit, null, (_, _) => _commands.Exit()));
     }
 
+    // Two independent switches, then one voice out of several. Every click plays what was picked, and the
+    // menu stays open so the voices can be compared.
+    private ToolStripMenuItem SoundMenu(PanelSettings panel)
+    {
+        var menu = new ToolStripMenuItem(_strings.Sound);
+        menu.DropDownItems.Add(Switch(_strings.SoundOnDone, panel.SoundOnDone, _commands.ToggleSoundOnDone));
+        menu.DropDownItems.Add(Switch(_strings.SoundOnAttention, panel.SoundOnAttention, _commands.ToggleSoundOnAttention));
+        menu.DropDownItems.Add(new ToolStripSeparator());
+
+        var styles = new List<ToolStripMenuItem>();
+        foreach (var (style, label) in new[]
+                 {
+                     (SoundStyle.Auto, _strings.SoundMatchTheme),
+                     (SoundStyle.Chime, _strings.SoundChime),
+                     (SoundStyle.Retro, _strings.SoundRetro),
+                     (SoundStyle.Bell, _strings.SoundBell),
+                 })
+        {
+            var item = new ToolStripMenuItem(label) { Checked = panel.SoundStyle == style };
+            item.Click += (_, _) =>
+            {
+                styles.ForEach(other => other.Checked = ReferenceEquals(other, item));
+                _commands.SelectSoundStyle(style);
+            };
+            styles.Add(item);
+            menu.DropDownItems.Add(item);
+        }
+
+        KeepOpenOnPick(menu, exclusive: false);
+        return menu;
+
+        static ToolStripMenuItem Switch(string text, bool isOn, Action toggle)
+        {
+            var item = new ToolStripMenuItem(text) { Checked = isOn };
+            item.Click += (_, _) =>
+            {
+                item.Checked = !item.Checked;
+                toggle();
+            };
+            return item;
+        }
+    }
+
     private static ToolStripMenuItem Check(string text, bool isChecked, Action onClick) =>
         new(text, null, (_, _) => onClick()) { Checked = isChecked };
 
@@ -217,7 +264,8 @@ public sealed class TrayIcon : IDisposable
     /// Picking an option in <paramref name="submenu"/> applies it but keeps the menu open, so the user can
     /// try theme after theme (or position after position) and watch the panel change, without reopening the menu.
     /// </summary>
-    private void KeepOpenOnPick(ToolStripMenuItem submenu)
+    /// <param name="exclusive">The submenu is one choice out of many: move the checkmark to the clicked item.</param>
+    private void KeepOpenOnPick(ToolStripMenuItem submenu, bool exclusive = true)
     {
         submenu.DropDown.ItemClicked += (_, e) =>
         {
@@ -227,7 +275,7 @@ public sealed class TrayIcon : IDisposable
             }
 
             _keepOpen = true;
-            foreach (var item in submenu.DropDownItems.OfType<ToolStripMenuItem>())
+            foreach (var item in exclusive ? submenu.DropDownItems.OfType<ToolStripMenuItem>() : [])
             {
                 item.Checked = ReferenceEquals(item, e.ClickedItem);
             }

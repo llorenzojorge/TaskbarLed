@@ -27,6 +27,14 @@ internal static unsafe partial class NativeMethods
 
     internal const int SW_RESTORE = 9;
 
+    internal const uint SND_ASYNC = 0x0001;
+    internal const uint SND_NODEFAULT = 0x0002;
+    internal const uint SND_MEMORY = 0x0004;
+
+    [LibraryImport("winmm.dll", EntryPoint = "PlaySoundW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static partial bool PlaySound(nint sound, nint module, uint flags);
+
     // SHQueryUserNotificationState results.
     internal const int QUNS_BUSY = 2;
     internal const int QUNS_RUNNING_D3D_FULL_SCREEN = 3;

@@ -41,6 +41,7 @@ You can switch to a click-through mini panel, alerts only, or nothing at all. Ex
 - **Many sessions, one glance.** Numbered, named tabs with status marks you can read without color: `▸` running, `✓` done, `!` waiting.
 - **Live details.** Current action (editing a file, running a command, searching), the last reply, prompt timer and context usage.
 - **Place it your way.** On the taskbar, floating just above it, or anywhere on screen with edge snapping. Each placement remembers its own spot.
+- **A short sound when it matters.** Two rising notes when a session finishes, the same note twice when one needs you, even over a full-screen video. Only while that session's app is out of sight. Three voices (chime, retro, bell) that follow the theme, or pick one; each sound can be turned off.
 - **Seven themes, switched live.** Claude Code by default, plus terminal, LED and modern looks, or [your own](#make-your-own-theme) from a small JSON file.
 - **English and Portuguese.** Follows Windows by default, or pick one in the menu.
 - **Works everywhere Claude Code runs.** Desktop app, CLI and IDE extensions (VS Code, JetBrains) share the same hooks.
@@ -125,6 +126,7 @@ TaskbarLed asks before connecting to Claude Code. It adds its hooks to `~/.claud
 | Move or resize | Menu → **Edit position and size**. Drag to move, drag the right edge to resize, arrow keys for 1 px steps (Shift for 10 px). Finish with the **Save** or **Cancel** button on the panel, or Enter / Esc |
 | Change where it sits | Menu → **Position**: on the taskbar, above the taskbar, or anywhere |
 | Change full-screen behavior | Menu → **In full screen** |
+| Change or mute the sounds | Menu → **Sound**. Each click plays what you picked |
 | Change language | Menu → **Language · Idioma** |
 
 <img src="docs/images/state-editing-en.png" alt="Edit mode" width="100%">

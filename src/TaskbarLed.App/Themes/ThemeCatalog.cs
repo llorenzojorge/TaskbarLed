@@ -11,7 +11,8 @@ namespace TaskbarLed.App.Themes;
 /// <param name="DisplayName">Name shown in the menu.</param>
 /// <param name="Uppercase">Show text in capitals (LED and terminal looks) or in normal case (modern looks).</param>
 /// <param name="Custom">The user's JSON theme, or null for a built-in one.</param>
-public sealed record ThemeInfo(string Id, string DisplayName, bool Uppercase, CustomTheme? Custom = null);
+/// <param name="Sound">Voice of the notification sounds while this theme is on (unless the user picked one).</param>
+public sealed record ThemeInfo(string Id, string DisplayName, bool Uppercase, CustomTheme? Custom = null, SoundStyle Sound = SoundStyle.Chime);
 
 /// <summary>
 /// Built-in themes plus the user's own JSON themes. To add a built-in one: create Themes/YourTheme.xaml with
@@ -28,11 +29,11 @@ public static class ThemeCatalog
     public static IReadOnlyList<ThemeInfo> All { get; } =
     [
         new("ClaudeCode", "Claude Code", Uppercase: false),
-        new("ModernTerminal", "Modern Terminal", Uppercase: false),
-        new("Matrix", "Matrix", Uppercase: true),
-        new("Mono", "Mono", Uppercase: true),
+        new("ModernTerminal", "Modern Terminal", Uppercase: false, Sound: SoundStyle.Bell),
+        new("Matrix", "Matrix", Uppercase: true, Sound: SoundStyle.Retro),
+        new("Mono", "Mono", Uppercase: true, Sound: SoundStyle.Retro),
         new("Minimal", "Minimal", Uppercase: false),
-        new("Glass", "Glass", Uppercase: false),
+        new("Glass", "Glass", Uppercase: false, Sound: SoundStyle.Bell),
         new("Paper", "Paper", Uppercase: false),
     ];
 

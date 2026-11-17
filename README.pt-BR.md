@@ -41,6 +41,7 @@ Também dá pra trocar para um mini painel no canto (os cliques passam para o v�
 - **Várias sessões num relance.** Abas numeradas e com nome, com símbolos que dá pra ler mesmo sem distinguir cor: `▸` rodando, `✓` concluída, `!` aguardando.
 - **Detalhes ao vivo.** Ação atual (editando arquivo, rodando comando, buscando), última resposta, cronômetro do prompt e uso do contexto.
 - **Do seu jeito.** Na barra de tarefas, flutuando logo acima dela, ou livre em qualquer lugar da tela, com ímã nas bordas. Cada modo lembra a própria posição.
+- **Um som curto quando importa.** Duas notas subindo quando uma sessão termina, a mesma nota duas vezes quando uma precisa de você, mesmo por cima de um vídeo em tela cheia. Só enquanto o app daquela sessão está fora de vista. Três timbres (suave, retrô, sino) que acompanham o tema, ou escolha um; cada som pode ser desligado.
 - **Sete temas, troca na hora.** Claude Code por padrão, além de visuais de terminal, LED e modernos, ou [o seu próprio](#crie-o-seu-próprio-tema) num pequeno arquivo JSON.
 - **Português e inglês.** Segue o idioma do Windows, ou você escolhe no menu.
 - **Funciona onde o Claude Code roda.** App desktop, CLI e extensões de IDE (VS Code, JetBrains) usam os mesmos hooks.
@@ -125,6 +126,7 @@ O TaskbarLed pede permissão antes de se conectar ao Claude Code. Ele adiciona h
 | Mover ou redimensionar | Menu → **Editar posição e tamanho**. Arraste para mover e a borda direita para redimensionar. As setas ajustam 1 px (Shift: 10 px). Termine com o botão **Salvar** ou **Cancelar** no próprio painel, ou Enter / Esc |
 | Mudar onde ele fica | Menu → **Posição**: na barra, acima da barra ou livre |
 | Mudar o comportamento em tela cheia | Menu → **Em tela cheia** |
+| Trocar ou silenciar os sons | Menu → **Som**. Cada clique toca o que você escolheu |
 | Trocar o idioma | Menu → **Idioma · Language** |
 
 <img src="docs/images/state-editing-pt.png" alt="Modo de edição" width="100%">

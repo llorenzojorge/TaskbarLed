@@ -42,6 +42,22 @@ public enum FullscreenBehavior
     Hide = 3,
 }
 
+/// <summary>How the notification sounds are voiced.</summary>
+public enum SoundStyle
+{
+    /// <summary>The style that goes with the current theme.</summary>
+    Auto = 0,
+
+    /// <summary>Soft, warm two-note chime.</summary>
+    Chime = 1,
+
+    /// <summary>Square beeps of an old terminal.</summary>
+    Retro = 2,
+
+    /// <summary>Small glass bell.</summary>
+    Bell = 3,
+}
+
 /// <summary>A panel position in device-independent pixels.</summary>
 /// <param name="X">Taskbar modes: distance from the taskbar's left edge. Free: distance from the monitor's left edge.</param>
 /// <param name="Y">Free mode only: distance from the monitor's top edge.</param>
@@ -71,6 +87,14 @@ public sealed record PanelSettings
     public double AboveGap { get; init; } = 8;
 
     public FullscreenBehavior Fullscreen { get; init; } = FullscreenBehavior.EdgeAndToast;
+
+    /// <summary>Play a short sound when a session finishes while its app is out of sight.</summary>
+    public bool SoundOnDone { get; init; } = true;
+
+    /// <summary>Play a short sound when a session starts waiting for the user while its app is out of sight.</summary>
+    public bool SoundOnAttention { get; init; } = true;
+
+    public SoundStyle SoundStyle { get; init; } = SoundStyle.Auto;
 
     /// <summary>Hide the panel when the Claude window shows at least this fraction of itself.</summary>
     public double VisibleThreshold { get; init; } = 0.30;
@@ -117,6 +141,7 @@ public sealed record PanelSettings
         RotationSeconds = Math.Clamp(RotationSeconds, 2, 120),
         StaleSessionHours = Math.Clamp(StaleSessionHours, 0.5, 168),
         Theme = string.IsNullOrWhiteSpace(Theme) ? DefaultTheme : Theme,
+        SoundStyle = Enum.IsDefined(SoundStyle) ? SoundStyle : SoundStyle.Auto,
     };
 
     private static PanelPosition Clamp(PanelPosition p) =>

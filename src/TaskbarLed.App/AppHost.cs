@@ -8,11 +8,13 @@ using TaskbarLed.App.Panels;
 using TaskbarLed.App.Presentation;
 using TaskbarLed.App.Themes;
 using TaskbarLed.App.Tray;
+using TaskbarLed.Core.Audio;
 using TaskbarLed.Core.Presentation;
 using TaskbarLed.Core.Sessions;
 using TaskbarLed.Core.Settings;
 using TaskbarLed.Core.Sources;
 using TaskbarLed.Core.Visibility;
+using TaskbarLed.Platform.Windows.Audio;
 using TaskbarLed.Platform.Windows.Ipc;
 using TaskbarLed.Platform.Windows.System;
 using TaskbarLed.Platform.Windows.Windowing;
@@ -48,6 +50,8 @@ public sealed class AppHost : IDisposable
     private readonly PanelManager _panels;
     private readonly OverlayManager _overlays = new();
     private readonly AlertDetector _alerts;
+    private readonly SoundCueSelector _soundCues = new();
+    private readonly WavePlayer _sound = new();
     private readonly DispatcherTimer _visibilityTimer;
     private readonly DispatcherTimer _frameTimer;
     private readonly DispatcherTimer _pruneTimer;
@@ -72,6 +76,7 @@ public sealed class AppHost : IDisposable
     private bool _menuOpen;
     private DateTimeOffset _previewUntil;
     private int _framePending;
+    private bool _soundFailureLogged;
     private bool _disposed;
 
     /// <param name="probe">Visibility check; replaceable for diagnostics or alternative window rules.</param>
@@ -160,6 +165,7 @@ public sealed class AppHost : IDisposable
 
         _panels.Dispose();
         _overlays.Dispose();
+        _sound.Dispose();
         _tray?.Dispose();
         _stop.Dispose();
         _log.Info("Stopped.");
@@ -200,6 +206,7 @@ public sealed class AppHost : IDisposable
 
         // Alerts are only for full-screen moments: everywhere else the panel already tells the story.
         var alerts = _alerts.Detect(sessions, now);
+        PlaySoundFor(alerts, sessions, now);
         if (alerts.Count == 0 || _allInSight
             || _settings.Panel.Fullscreen is not (FullscreenBehavior.EdgeAndToast or FullscreenBehavior.ToastOnly))
         {
@@ -212,6 +219,56 @@ public sealed class AppHost : IDisposable
             {
                 _overlays.ShowAlert(alert with { Text = _viewModel.Cased(alert.Text) }, monitor);
             }
+        }
+    }
+
+    // A sound reaches the user wherever they are looking, full screen included, so it is not tied to the
+    // overlays below: only to the session's app being out of sight.
+    private void PlaySoundFor(IReadOnlyList<PanelAlert> alerts, IReadOnlyList<Session> sessions, DateTimeOffset now)
+    {
+        if (alerts.Count == 0)
+        {
+            return;
+        }
+
+        var threshold = _settings.Panel.VisibleThreshold;
+        var cue = _soundCues.Pick(
+            alerts,
+            id => sessions.FirstOrDefault(s => s.Id == id) is { } session
+                && !SessionVisibility.IsInSight(session, _hostWindows, threshold),
+            _settings.Panel,
+            now);
+
+        if (cue is { } chosen)
+        {
+            Play(chosen);
+        }
+    }
+
+    private void Play(SoundCue cue)
+    {
+        var style = _settings.Panel.SoundStyle == SoundStyle.Auto
+            ? ThemeCatalog.Resolve(_settings.Panel.Theme).Sound
+            : _settings.Panel.SoundStyle;
+        if (!_sound.Play(ToneSynth.Render(style, cue)) && !_soundFailureLogged)
+        {
+            _soundFailureLogged = true; // Once: a PC without an audio device would fill the log.
+            _log.Info("Windows could not play the notification sound.");
+        }
+    }
+
+    // Turning a sound on plays it, so the user hears what they just asked for.
+    private void ToggleSound(SoundCue cue)
+    {
+        var panel = _settings.Panel;
+        panel = cue == SoundCue.Done
+            ? panel with { SoundOnDone = !panel.SoundOnDone }
+            : panel with { SoundOnAttention = !panel.SoundOnAttention };
+        UpdatePanel(panel);
+
+        if (cue == SoundCue.Done ? panel.SoundOnDone : panel.SoundOnAttention)
+        {
+            Play(cue);
         }
     }
 
@@ -499,6 +556,13 @@ public sealed class AppHost : IDisposable
         {
             UpdatePanel(_settings.Panel with { Theme = theme });
             ApplyTheme(theme); // Live: every color is a DynamicResource.
+        },
+        ToggleSoundOnDone: () => ToggleSound(SoundCue.Done),
+        ToggleSoundOnAttention: () => ToggleSound(SoundCue.Attention),
+        SelectSoundStyle: style =>
+        {
+            UpdatePanel(_settings.Panel with { SoundStyle = style });
+            Play(SoundCue.Done); // Hear the voice just picked.
         },
         SelectLanguage: SelectLanguage,
         ToggleHideWhenIdle: () => UpdatePanel(_settings.Panel with { HideWhenIdle = !_settings.Panel.HideWhenIdle }),

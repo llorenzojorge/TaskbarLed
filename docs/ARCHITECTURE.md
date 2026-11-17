@@ -30,6 +30,7 @@ Dependencies only point inward: `App → Platform.Windows, Sources.* → Core` a
 6. **Visibility.** Every 400 ms, `ClaudeVisibilityProbe` walks the window z-order. `OcclusionCalculator` then estimates how much of the Claude window, and of each VS Code window, is visible. Each session knows its app (`SessionHost`, from the `CLAUDE_CODE_ENTRYPOINT` and `TERM_PROGRAM` variables the hook copies into the envelope), and `SessionVisibility` checks that app's window: for VS Code, the window whose title names the project folder. The panels show while any active session's app is out of sight, except on monitors running something full screen. Sessions are also checked every 2 s for a prompt the user interrupted, which runs no hook (`TranscriptInterruptionReader`).
 7. **View.** `PanelManager` keeps one `PanelWindow` per target monitor. It places the window with `PanelLayout` for the chosen placement (on the taskbar, above it, or free), in physical pixels and DPI-aware.
 8. **Full screen.** `FullscreenDetector` tells *borderless* full screen (video in a browser, which can be drawn over) from *exclusive* full screen (games, which cannot). For borderless, `OverlayManager` shows an `EdgeGlowWindow` while something needs a look. `AlertDetector` emits a one-off `PanelAlert` when a known session finishes or starts waiting, and `AlertWindow` shows it for 4 seconds. Alternatively, the panel itself shrinks into a click-through corner mini panel.
+9. **Sound.** The same `PanelAlert`s feed `SoundCueSelector` (Core), which decides whether to play and which cue: only for a session whose app is out of sight, "waiting" over "done", bursts merged. `ToneSynth` (Core) renders the cue as a WAV in memory, in the voice of the theme or the one the user picked, and `WavePlayer` (Platform.Windows) plays it. No audio files.
 
 ## Extension points
 
@@ -40,6 +41,7 @@ Dependencies only point inward: `App → Platform.Windows, Sources.* → Core` a
 | Add a built-in theme | Copy `src/TaskbarLed.App/Themes/Matrix.xaml`, add it to `ThemeCatalog` | Keep every `Led.*` key. Preview with `--render-demo`, which renders the real `PanelView` to PNG (`DemoRenderer`). |
 | Translate | `TickerStrings`, `ActivityStrings`, `UiStrings` | One factory per language, chosen by the UI culture. |
 | Show plan limits | `IUsageLimitProvider` | Must be opt-in if it reads credentials. |
+| Add a sound voice | `SoundStyle` + a `Voice` and notes in `ToneSynth`, a label in `UiStrings`, an item in `TrayIcon.SoundMenu` | Keep it under half a second and quiet; the tests check both. |
 | Change when the panel hides | `IClaudeVisibilityProbe`, `VisibleThreshold` | |
 
 ## Design decisions
