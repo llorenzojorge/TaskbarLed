@@ -28,7 +28,7 @@ public class PanelComposerTests
         [
             Session("a", SessionStatus.Running) with
             {
-                Title = "webapp", PromptStartedAt = At(0), Activity = "Editando scraper.py", ContextUsage = 0.424,
+                Title = "webapp", PromptStartedAt = At(0), Activity = "Editando scraper.py",
             },
             Session("b", SessionStatus.Running) with { ProjectName = "api" },
         ];
@@ -39,18 +39,19 @@ public class PanelComposerTests
         Assert.Equal([true, false], frame.Channels.Select(c => c.IsSelected));
         Assert.Equal("Editando scraper.py", frame.Feed);
         Assert.Equal("04:12", frame.ElapsedText);
-        Assert.Equal("CTX 42%", frame.ContextText);
         Assert.True(frame.HasActivity);
     }
 
     [Fact]
-    public void Long_session_names_are_shortened_on_tabs()
+    public void Tabs_carry_the_whole_title_and_only_absurd_ones_are_capped()
     {
         var session = Session("a", SessionStatus.Running) with { Title = "Indicador visual de progresso do Claude" };
+        var huge = Session("b", SessionStatus.Running) with { Title = new string('x', 300) };
 
-        var frame = _composer.Compose([session], At(0));
+        var frame = _composer.Compose([session, huge], At(0));
 
-        Assert.Equal("1 Indicador v…", frame.Channels.Single().Label);
+        Assert.Equal("1 Indicador visual de progresso do Claude", frame.Channels[0].Label);
+        Assert.Equal(2 + 40, frame.Channels[1].Label.Length);
     }
 
     [Fact]
@@ -84,6 +85,20 @@ public class PanelComposerTests
 
         Assert.Equal("Aguardando você  ›  Rodar npm install?", frame.Feed);
         Assert.True(frame.NeedsAttention);
+    }
+
+    [Fact]
+    public void The_chat_is_named_on_its_tab_and_the_feed_keeps_its_room_for_what_happened()
+    {
+        var done = Session("a", SessionStatus.Completed) with
+        {
+            Title = "Bug visual da taskbar", PromptStartedAt = At(0), PromptEndedAt = At(28), LastMessage = "Pronto.",
+        };
+
+        var frame = _composer.Compose([done], At(60));
+
+        Assert.Equal("1 Bug visual da taskbar", frame.Channels.Single().Label);
+        Assert.Equal("Concluído em 28s  ›  Pronto.", frame.Feed);
     }
 
     [Theory]

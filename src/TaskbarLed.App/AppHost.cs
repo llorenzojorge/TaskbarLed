@@ -129,8 +129,7 @@ public sealed class AppHost : IDisposable
         ISessionSource[] sources =
         [
             new ClaudeCodeSource(
-                new ToolActivityFormatter(ActivityStrings.For(_culture), _culture),
-                new TranscriptUsageReader()),
+                new ToolActivityFormatter(ActivityStrings.For(_culture), _culture)),
         ];
         var pump = new EventPump(sources, _store, _log);
         _eventPump = pump;

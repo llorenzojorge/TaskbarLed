@@ -41,8 +41,8 @@ public sealed record PromptInterrupted(string SessionId, string SourceId, DateTi
 public sealed record HostIdentified(string SessionId, string SourceId, DateTimeOffset Timestamp, SessionHost Host)
     : SessionEvent(SessionId, SourceId, Timestamp);
 
-/// <summary>A new measurement of how full the context window is (0..1).</summary>
-public sealed record ContextUsageMeasured(string SessionId, string SourceId, DateTimeOffset Timestamp, double Usage)
+/// <summary>The source learned the conversation's title (renamed by the user, or named by the agent).</summary>
+public sealed record TitleIdentified(string SessionId, string SourceId, DateTimeOffset Timestamp, string Title)
     : SessionEvent(SessionId, SourceId, Timestamp);
 
 /// <summary>The session was closed and should leave the panel.</summary>

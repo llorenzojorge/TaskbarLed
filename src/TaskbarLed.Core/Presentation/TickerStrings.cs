@@ -8,24 +8,21 @@ public sealed record TickerStrings(
     string Thinking,
     string Done,
     string DoneIn,
-    string WaitingForYou,
-    string Context)
+    string WaitingForYou)
 {
     public static TickerStrings English { get; } = new(
         Idle: "Claude idle",
         Thinking: "Thinking…",
         Done: "Done",
         DoneIn: "Done in {0}",
-        WaitingForYou: "Waiting for you",
-        Context: "CTX");
+        WaitingForYou: "Waiting for you");
 
     public static TickerStrings Portuguese { get; } = new(
         Idle: "Claude ocioso",
         Thinking: "Pensando…",
         Done: "Concluído",
         DoneIn: "Concluído em {0}",
-        WaitingForYou: "Aguardando você",
-        Context: "CTX");
+        WaitingForYou: "Aguardando você");
 
     /// <summary>Picks the strings that match <paramref name="culture"/>, falling back to English.</summary>
     public static TickerStrings For(CultureInfo culture)

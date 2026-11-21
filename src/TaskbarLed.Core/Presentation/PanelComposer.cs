@@ -9,7 +9,8 @@ public sealed class PanelComposer
 {
     private const string Separator = "  ›  ";
     private const int MaxMessageLength = 140;
-    private const int MaxTabNameLength = 12;
+    // Tabs trim themselves to the room they get (TabStripLayout); this only caps absurdly long titles.
+    private const int MaxTabNameLength = 40;
 
     private readonly SessionRotation _rotation;
     private readonly TickerStrings _strings;
@@ -40,15 +41,11 @@ public sealed class PanelComposer
             .ToList();
 
         var elapsed = selected.Elapsed(now);
-        var context = selected.ContextUsage is { } usage
-            ? string.Create(_culture, $"{_strings.Context} {Math.Round(usage * 100):0}%")
-            : string.Empty;
 
         return new PanelFrame(
             channels,
             FeedLine(selected, elapsed),
             elapsed is { } e ? DurationFormat.Clock(e) : string.Empty,
-            context,
             selected.Status,
             selected.Id,
             HasUnseenCompletion: sessions.Any(s => s.Status == SessionStatus.Completed),
@@ -59,7 +56,7 @@ public sealed class PanelComposer
     private static string TabLabel(int position, Session session) =>
         string.Create(CultureInfo.InvariantCulture, $"{position} {Clean(session.DisplayName, MaxTabNameLength)}");
 
-    // The tab already names the session, so the feed only says what is happening.
+    // The tab names the chat (its whole title when there is room), so the feed only says what is happening.
     private string FeedLine(Session session, TimeSpan? elapsed)
     {
         var builder = new StringBuilder();

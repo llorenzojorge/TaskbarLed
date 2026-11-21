@@ -1,10 +1,11 @@
 <!--
-  The panel's look on Avalonia: session tabs, feed line, timer and context, blinking outline.
+  The panel's look on Avalonia: session tabs, feed line and timer, blinking outline.
   Mirrors src/TaskbarLed.App/Panels/PanelView.xaml (WPF). Colors come from the Led.* resources.
 -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:TaskbarLed.App.Avalonia.Presentation"
+             xmlns:panels="using:TaskbarLed.App.Avalonia.Panels"
              x:Class="TaskbarLed.App.Avalonia.Panels.PanelView"
              x:DataType="vm:PanelViewModel">
 
@@ -29,33 +30,33 @@
       <Setter Property="BorderBrush" Value="Transparent" />
       <Setter Property="Background" Value="{DynamicResource Led.ChannelOffBrush}" />
     </Style>
-    <Style Selector="Border.tab > TextBlock">
+    <Style Selector="Border.tab TextBlock">
       <Setter Property="FontFamily" Value="{DynamicResource Led.FontFamily}" />
-      <Setter Property="FontSize" Value="9.5" />
+      <Setter Property="FontSize" Value="10.5" />
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="Foreground" Value="{DynamicResource Led.DimBrush}" />
     </Style>
-    <Style Selector="Border.tab.running > TextBlock">
+    <Style Selector="Border.tab.running TextBlock">
       <Setter Property="Foreground" Value="{DynamicResource Led.ForegroundBrush}" />
     </Style>
-    <Style Selector="Border.tab.completed > TextBlock">
+    <Style Selector="Border.tab.completed TextBlock">
       <Setter Property="Foreground" Value="{DynamicResource Led.DoneBrush}" />
     </Style>
-    <Style Selector="Border.tab.awaiting > TextBlock">
+    <Style Selector="Border.tab.awaiting TextBlock">
       <Setter Property="Foreground" Value="{DynamicResource Led.AttentionBrush}" />
     </Style>
     <!-- Selected tab: lit outline, bold text. Declared after the status colors so it wins. -->
     <Style Selector="Border.tab.selected">
       <Setter Property="BorderBrush" Value="{DynamicResource Led.ForegroundBrush}" />
     </Style>
-    <Style Selector="Border.tab.selected > TextBlock">
+    <Style Selector="Border.tab.selected TextBlock">
       <Setter Property="Foreground" Value="{DynamicResource Led.ForegroundBrush}" />
       <Setter Property="FontWeight" Value="Bold" />
     </Style>
     <Style Selector="Border.tab.selected.awaiting">
       <Setter Property="BorderBrush" Value="{DynamicResource Led.AttentionBrush}" />
     </Style>
-    <Style Selector="Border.tab.selected.awaiting > TextBlock">
+    <Style Selector="Border.tab.selected.awaiting TextBlock">
       <Setter Property="Foreground" Value="{DynamicResource Led.AttentionBrush}" />
     </Style>
 
@@ -81,10 +82,10 @@
             BorderBrush="{DynamicResource Led.BorderBrush}" />
 
     <Grid Margin="6,3,8,2" RowDefinitions="Auto,*" ColumnDefinitions="*,Auto">
-      <ItemsControl Grid.Row="0" Grid.Column="0" ItemsSource="{Binding Channels}" ClipToBounds="True">
+      <ItemsControl Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" ItemsSource="{Binding Channels}" ClipToBounds="True">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
-            <StackPanel Orientation="Horizontal" />
+            <panels:TabStripPanel />
           </ItemsPanelTemplate>
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
@@ -95,9 +96,11 @@
                     Classes.awaiting="{Binding IsAwaiting}"
                     Classes.selected="{Binding IsSelected}"
                     Classes.blink="{Binding IsCompleted}">
-              <TextBlock>
-                <Run Text="{Binding Label}" /><Run Text=" " /><Run Text="{Binding Glyph}" />
-              </TextBlock>
+              <!-- The status mark stays whole; the title gives way when the row is full. -->
+              <DockPanel>
+                <TextBlock DockPanel.Dock="Right" Margin="4,0,0,0" Text="{Binding Glyph}" />
+                <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+              </DockPanel>
             </Border>
           </DataTemplate>
         </ItemsControl.ItemTemplate>
@@ -112,14 +115,10 @@
         </TextBlock.Effect>
       </TextBlock>
 
-      <StackPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
-        <TextBlock Text="{Binding ElapsedText}" HorizontalAlignment="Right"
-                   FontFamily="{DynamicResource Led.FontFamily}" FontSize="12" FontWeight="SemiBold"
-                   Foreground="{DynamicResource Led.ForegroundBrush}" />
-        <TextBlock Text="{Binding ContextText}" HorizontalAlignment="Right"
-                   FontFamily="{DynamicResource Led.FontFamily}" FontSize="10"
-                   Foreground="{DynamicResource Led.DimBrush}" />
-      </StackPanel>
+      <!-- Prompt timer on the feed's line, so the tabs get the whole top row for chat titles. -->
+      <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ElapsedText}" VerticalAlignment="Center" Margin="10,0,0,0"
+                 FontFamily="{DynamicResource Led.FontFamily}" FontSize="12" FontWeight="SemiBold"
+                 Foreground="{DynamicResource Led.ForegroundBrush}" />
     </Grid>
 
     <!-- Outline that blinks green while a finished session waits to be seen, amber when one waits for you. -->

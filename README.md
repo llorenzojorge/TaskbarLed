@@ -23,7 +23,7 @@ It wears the colors of the Claude Code terminal by default: cream text on warm c
 
 | | |
 |---|---|
-| **Working.** The lit tab is the one in the feed. You see the current action, a prompt timer and how full the context window is. | <img src="docs/images/state-running-en.png" alt="Running"> |
+| **Working.** The lit tab is the one in the feed. You see the current action and how long the prompt has been running. | <img src="docs/images/state-running-en.png" alt="Running"> |
 | **Needs you.** A permission request or a question turns the tab and the feed gold, blinking, and that session jumps to the front. | <img src="docs/images/state-waiting-en.png" alt="Waiting for approval"> |
 | **Done.** The tab shows `✓` and the panel blinks green **until you open the session's app** (Claude or VS Code), with the duration and Claude's last reply. | <img src="docs/images/state-done-en.png" alt="Finished"> |
 
@@ -38,8 +38,8 @@ You can switch to a click-through mini panel, alerts only, or nothing at all. Ex
 ## Features
 
 - **Shows up only when useful.** Hidden while you can see the app each session runs in, including side by side with another app. Shown when it is minimized, covered or on another virtual desktop. A session in VS Code follows its VS Code window, so opening the Claude app does not hide it.
-- **Many sessions, one glance.** Numbered, named tabs with status marks you can read without color: `▸` running, `✓` done, `!` waiting.
-- **Live details.** Current action (editing a file, running a command, searching), the last reply, prompt timer and context usage.
+- **Many sessions, one glance.** Numbered tabs named after each chat's title (the one in Claude's chat list; the folder name when there is none), with status marks you can read without color: `▸` running, `✓` done, `!` waiting.
+- **Live details.** Current action (editing a file, running a command, searching), the last reply and the prompt timer.
 - **Place it your way.** On the taskbar, floating just above it, or anywhere on screen with edge snapping. Each placement remembers its own spot.
 - **A short sound when it matters.** Two rising notes when a session finishes, the same note twice when one needs you, even over a full-screen video. Only while that session's app is out of sight. Three voices (chime, retro, bell) that follow the theme, or pick one; each sound can be turned off.
 - **Seven themes, switched live.** Claude Code by default, plus terminal, LED and modern looks, or [your own](#make-your-own-theme) from a small JSON file.
@@ -77,7 +77,7 @@ Every field except `name` is optional. Anything left out keeps the Claude Code t
 | `name` | Name in the menu (required, up to 40 characters) |
 | `background`, `border` | Panel background and outline |
 | `foreground` | Main text and running tabs |
-| `dim` | Secondary text (context usage, idle tabs) |
+| `dim` | Secondary text (idle tabs) |
 | `attention` | "Waiting for you": make it stand out from `foreground` |
 | `done` | Finished tabs, the green blink and the edge glow |
 | `tabBackground` | Background of tabs that are not selected |
@@ -147,7 +147,7 @@ Claude Code hook ──stdin──▶ TaskbarLed.Hook.exe ──named pipe──
 ```
 
 - **Hook bridge.** A tiny executable the Claude Code hooks call. It forwards the raw event in about 65 ms, never prints, and always exits 0, so it can never slow down or break Claude.
-- **Translation.** All Claude Code knowledge lives in one class (`ClaudeCodeSource`), covered by tests. Context usage comes from the tail of the conversation transcript.
+- **Translation.** All Claude Code knowledge lives in one class (`ClaudeCodeSource`), covered by tests. Chat titles come from the tail of the conversation transcript.
 - **Visibility.** The app walks the window z-order to measure how much of the Claude window you can actually see, and checks for full-screen apps on each monitor.
 
 Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.

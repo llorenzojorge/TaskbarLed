@@ -85,24 +85,27 @@ internal static class DemoRenderer
         void Prompt(string id, string project, int minutesAgo, int secondsAgo = 0) =>
             store.Apply(new PromptSubmitted(id, "demo", Now.AddMinutes(-minutesAgo).AddSeconds(-secondsAgo), null, project));
 
+        // Chats are named by their title, as in the Claude app; generic ones, never real projects.
+        void Title(string id, string title) => store.Apply(new TitleIdentified(id, "demo", Now, title));
+
         Prompt("a", "webapp", 4, 12);
+        Title("a", pt ? "Scraper de preços" : "Price scraper");
         store.Apply(new ActivityStarted("a", "demo", Now.AddSeconds(-3), pt ? "Editando scraper.py" : "Editing scraper.py"));
-        store.Apply(new ContextUsageMeasured("a", "demo", Now, 0.42));
 
         Prompt("b", "api", 12, 47);
+        Title("b", pt ? "Testes da API de pedidos" : "Orders API tests");
         Prompt("c", "site", 1, 3);
+        Title("c", pt ? "Landing page" : "Landing page");
         store.Apply(new ActivityStarted("c", "demo", Now.AddSeconds(-5), pt ? "Rodando npm test" : "Running npm test"));
 
         switch (scenario)
         {
             case Scenario.Waiting:
                 store.Apply(new AttentionRequested("c", "demo", Now, pt ? "Rodar npm install?" : "Run npm install?"));
-                store.Apply(new ContextUsageMeasured("c", "demo", Now, 0.18));
                 break;
 
             case Scenario.Done:
                 store.Apply(new ResponseCompleted("b", "demo", Now, pt ? "Pronto. 24 testes passando." : "Done. All 24 tests pass."));
-                store.Apply(new ContextUsageMeasured("b", "demo", Now, 0.67));
                 break;
 
             case Scenario.Mixed:

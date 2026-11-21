@@ -70,7 +70,8 @@ public static class SessionReducer
 
             HostIdentified e => session with { Host = e.Host },
 
-            ContextUsageMeasured e => session with { ContextUsage = Math.Clamp(e.Usage, 0d, 1d) },
+            // The conversation's own title beats the folder name, which is meaningless for scratch chats.
+            TitleIdentified e when !string.IsNullOrWhiteSpace(e.Title) => session with { Title = e.Title.Trim() },
 
             _ => session,
         };

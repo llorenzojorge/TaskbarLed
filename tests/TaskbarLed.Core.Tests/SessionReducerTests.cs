@@ -19,6 +19,20 @@ public class SessionReducerTests
     }
 
     [Fact]
+    public void Conversation_title_replaces_the_folder_name_and_keeps_the_status()
+    {
+        var session = Fold(
+            new PromptSubmitted("s1", Source, At(0), null, "scratch-2026-11-21-53192f"),
+            new TitleIdentified("s1", Source, At(1), "  Multi-agents com Hermes e Orca "));
+
+        Assert.Equal("Multi-agents com Hermes e Orca", session.DisplayName);
+        Assert.Equal(SessionStatus.Running, session.Status);
+
+        var blank = SessionReducer.Apply(session, new TitleIdentified("s1", Source, At(2), " "))!;
+        Assert.Equal("Multi-agents com Hermes e Orca", blank.Title);
+    }
+
+    [Fact]
     public void Activity_is_shown_while_running_and_cleared_on_completion()
     {
         var session = Fold(
@@ -70,16 +84,6 @@ public class SessionReducerTests
     {
         var session = Fold(new PromptSubmitted("s1", Source, At(0), null, null));
         Assert.Null(SessionReducer.Apply(session, new SessionEnded("s1", Source, At(1))));
-    }
-
-    [Theory]
-    [InlineData(-0.5, 0)]
-    [InlineData(0.42, 0.42)]
-    [InlineData(7, 1)]
-    public void Context_usage_is_clamped(double measured, double expected)
-    {
-        var session = SessionReducer.Apply(null, new ContextUsageMeasured("s1", Source, At(0), measured))!;
-        Assert.Equal(expected, session.ContextUsage);
     }
 
     [Fact]

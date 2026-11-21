@@ -59,9 +59,6 @@ public sealed partial class PanelViewModel : ObservableObject
     public partial string ElapsedText { get; set; } = string.Empty;
 
     [ObservableProperty]
-    public partial string ContextText { get; set; } = string.Empty;
-
-    [ObservableProperty]
     public partial SessionStatus SelectedStatus { get; set; }
 
     /// <summary>A session finished and the user has not opened Claude yet: the panel blinks.</summary>
@@ -102,7 +99,6 @@ public sealed partial class PanelViewModel : ObservableObject
 
         Feed = frame.Feed;
         ElapsedText = frame.ElapsedText;
-        ContextText = frame.ContextText;
         SelectedStatus = frame.SelectedStatus;
         IsBlinking = frame.HasUnseenCompletion && !frame.NeedsAttention;
         NeedsAttention = frame.NeedsAttention;

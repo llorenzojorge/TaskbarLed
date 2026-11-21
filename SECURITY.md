@@ -15,7 +15,7 @@ TaskbarLed runs as you, without administrator rights, and makes no network reque
 | It reads | Why |
 |---|---|
 | Hook events from Claude Code: prompt titles, tool names and inputs, the last reply | To show what each session is doing |
-| The end of each session's transcript (`.jsonl` under `~/.claude`) | Context usage, and to notice a prompt you interrupted |
+| The end of each session's transcript (`.jsonl` under `~/.claude`) | The chat's title, and to notice a prompt you interrupted |
 | Titles and positions of windows on screen | To know whether Claude or VS Code is in sight |
 | JSON theme files in `%APPDATA%\TaskbarLed\themes` | Your own themes |
 

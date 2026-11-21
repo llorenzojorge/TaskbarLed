@@ -13,7 +13,6 @@ public sealed record ChannelState(string SessionId, string Label, SessionStatus 
 /// <param name="Channels">One tab per session, in stable order.</param>
 /// <param name="Feed">Latest line for the selected session; a change means "new line in the feed".</param>
 /// <param name="ElapsedText">Prompt timer for the selected session (e.g. <c>04:12</c>).</param>
-/// <param name="ContextText">Context usage for the selected session (e.g. <c>CTX 42%</c>).</param>
 /// <param name="SelectedStatus">Status of the session in the feed.</param>
 /// <param name="SelectedSessionId">Id of the session in the feed.</param>
 /// <param name="HasUnseenCompletion">At least one session finished and the user has not looked yet.</param>
@@ -23,7 +22,6 @@ public sealed record PanelFrame(
     IReadOnlyList<ChannelState> Channels,
     string Feed,
     string ElapsedText,
-    string ContextText,
     SessionStatus SelectedStatus,
     string? SelectedSessionId,
     bool HasUnseenCompletion,
@@ -31,5 +29,5 @@ public sealed record PanelFrame(
     bool HasActivity)
 {
     public static PanelFrame Empty(string feed) =>
-        new([], feed, string.Empty, string.Empty, SessionStatus.Idle, null, false, false, false);
+        new([], feed, string.Empty, SessionStatus.Idle, null, false, false, false);
 }

@@ -23,11 +23,9 @@ internal sealed class DemoFeed
 
         Prompt("a", "webapp", TimeSpan.FromSeconds(252));
         _store.Apply(new ActivityStarted("a", "demo", start.AddSeconds(-3), pt ? "Editando scraper.py" : "Editing scraper.py"));
-        _store.Apply(new ContextUsageMeasured("a", "demo", start, 0.42));
 
         Prompt("b", "api", TimeSpan.FromSeconds(767));
         _store.Apply(new ResponseCompleted("b", "demo", start, pt ? "Pronto. 24 testes passando." : "Done. All 24 tests pass."));
-        _store.Apply(new ContextUsageMeasured("b", "demo", start, 0.67));
 
         Prompt("c", "site", TimeSpan.FromSeconds(63));
         _store.Apply(new ActivityStarted("c", "demo", start.AddSeconds(-5), pt ? "Rodando npm test" : "Running npm test"));

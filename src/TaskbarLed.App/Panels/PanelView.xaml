@@ -9,6 +9,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:TaskbarLed.App.Presentation"
+             xmlns:panels="clr-namespace:TaskbarLed.App.Panels"
              xmlns:s="clr-namespace:TaskbarLed.Core.Sessions;assembly=TaskbarLed.Core"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:PanelViewModel}"
@@ -100,10 +101,15 @@
     <DataTemplate x:Key="SessionTab" DataType="{x:Type vm:ChannelViewModel}">
       <Border x:Name="Tab" Margin="0,0,3,0" Padding="3,0" CornerRadius="2" BorderThickness="1" BorderBrush="Transparent"
               Background="{DynamicResource Led.ChannelOffBrush}">
-        <TextBlock x:Name="TabText" FontFamily="{DynamicResource Led.FontFamily}" FontSize="9.5" FontWeight="SemiBold"
-                   Foreground="{DynamicResource Led.DimBrush}">
-          <Run Text="{Binding Label, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding Glyph, Mode=OneWay}" />
-        </TextBlock>
+        <!-- The status mark stays whole; the title gives way ("1 Bug visual da…") when the row is full. -->
+        <DockPanel LastChildFill="True">
+          <TextBlock DockPanel.Dock="Right" Margin="4,0,0,0" Text="{Binding Glyph, Mode=OneWay}"
+                     FontFamily="{Binding FontFamily, ElementName=TabText}" FontSize="{Binding FontSize, ElementName=TabText}"
+                     FontWeight="{Binding FontWeight, ElementName=TabText}" Foreground="{Binding Foreground, ElementName=TabText}" />
+          <TextBlock x:Name="TabText" Text="{Binding Label, Mode=OneWay}" TextTrimming="CharacterEllipsis"
+                     FontFamily="{DynamicResource Led.FontFamily}" FontSize="10.5" FontWeight="SemiBold"
+                     Foreground="{DynamicResource Led.DimBrush}" />
+        </DockPanel>
       </Border>
       <DataTemplate.Triggers>
         <DataTrigger Binding="{Binding Status}" Value="{x:Static s:SessionStatus.Running}">
@@ -176,11 +182,11 @@
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
 
-      <ItemsControl Grid.Row="0" Grid.Column="0" ItemsSource="{Binding Channels}" ItemTemplate="{StaticResource SessionTab}"
+      <ItemsControl Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" ItemsSource="{Binding Channels}" ItemTemplate="{StaticResource SessionTab}"
                     ClipToBounds="True" Focusable="False">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
-            <StackPanel Orientation="Horizontal" />
+            <panels:TabStripPanel />
           </ItemsPanelTemplate>
         </ItemsControl.ItemsPanel>
       </ItemsControl>
@@ -242,23 +248,20 @@
       <!-- LED dots only over the feed's large text; small tab labels stay crisp. -->
       <Rectangle Grid.Row="1" Grid.Column="0" Fill="{DynamicResource Led.DotGridBrush}" IsHitTestVisible="False" />
 
-      <StackPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" VerticalAlignment="Center" Margin="10,0,0,0">
-        <StackPanel.Style>
-          <Style TargetType="StackPanel">
+      <!-- Prompt timer on the feed's line, so the tabs get the whole top row for chat titles. -->
+      <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ElapsedText}" VerticalAlignment="Center" Margin="10,0,0,0"
+                 FontFamily="{DynamicResource Led.FontFamily}" FontSize="12" FontWeight="SemiBold"
+                 Foreground="{DynamicResource Led.ForegroundBrush}">
+        <TextBlock.Style>
+          <Style TargetType="TextBlock">
             <Style.Triggers>
               <DataTrigger Binding="{Binding IsEditing}" Value="True">
                 <Setter Property="Visibility" Value="Hidden" />
               </DataTrigger>
             </Style.Triggers>
           </Style>
-        </StackPanel.Style>
-        <TextBlock Text="{Binding ElapsedText}" HorizontalAlignment="Right"
-                   FontFamily="{DynamicResource Led.FontFamily}" FontSize="12" FontWeight="SemiBold"
-                   Foreground="{DynamicResource Led.ForegroundBrush}" />
-        <TextBlock Text="{Binding ContextText}" HorizontalAlignment="Right"
-                   FontFamily="{DynamicResource Led.FontFamily}" FontSize="10"
-                   Foreground="{DynamicResource Led.DimBrush}" />
-      </StackPanel>
+        </TextBlock.Style>
+      </TextBlock>
     </Grid>
 
     <Rectangle Style="{StaticResource Halo}" RadiusX="4" RadiusY="4" StrokeThickness="1.5" IsHitTestVisible="False" />

@@ -7,14 +7,13 @@ namespace TaskbarLed.Sources.ClaudeCode.Tests;
 public class ClaudeCodeSourceTests
 {
     private static readonly DateTimeOffset At = new(2026, 11, 14, 3, 28, 0, TimeSpan.Zero);
-    private readonly FakeUsageReader _usage = new();
     private readonly FakeInterruptionReader _interruptions = new();
     private readonly ClaudeCodeSource _source;
 
     public ClaudeCodeSourceTests()
     {
         var culture = CultureInfo.GetCultureInfo("en-US");
-        _source = new ClaudeCodeSource(new ToolActivityFormatter(ActivityStrings.English, culture), _usage, _interruptions);
+        _source = new ClaudeCodeSource(new ToolActivityFormatter(ActivityStrings.English, culture), _interruptions);
     }
 
     [Fact]
@@ -29,6 +28,58 @@ public class ClaudeCodeSourceTests
         Assert.Equal("LED panel", prompt.Title);
         Assert.Equal("TaskbarLed", prompt.ProjectName);
         Assert.Equal(At, prompt.Timestamp);
+    }
+
+    [Fact]
+    public async Task Prompt_and_stop_name_the_chat_from_its_transcript_title()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"chat-{Guid.NewGuid():N}.jsonl");
+        await File.WriteAllTextAsync(path, """{"type":"custom-title","customTitle":"Bug visual da taskbar"}""" + "\n");
+        try
+        {
+            var json = JsonSerializer.Serialize(path);
+            foreach (var hook in new[] { "UserPromptSubmit", "Stop" })
+            {
+                var events = await Translate(
+                    $$"""{"session_id":"s1","hook_event_name":"{{hook}}","cwd":"C:\\scratch-2026-11-21-53192f","transcript_path":{{json}}}""");
+
+                Assert.Equal("Bug visual da taskbar", Assert.Single(events.OfType<TitleIdentified>()).Title);
+            }
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task A_chat_first_seen_mid_prompt_gets_its_title_folder_and_real_prompt_start()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"chat-{Guid.NewGuid():N}.jsonl");
+        await File.WriteAllTextAsync(path, """
+            {"type":"user","origin":{"kind":"human"},"timestamp":"2026-11-14T03:20:00Z","message":{"content":"faz o portfólio"}}
+            {"type":"custom-title","customTitle":"Portfólio pessoal minimalista"}
+            """ + "\n");
+        try
+        {
+            var json = JsonSerializer.Serialize(path);
+            var tool = $$"""{"session_id":"s9","hook_event_name":"PreToolUse","tool_name":"Read","tool_input":{},"cwd":"C:\\scratch-1","transcript_path":{{json}}}""";
+
+            var events = await Translate(tool);
+
+            var prompt = Assert.Single(events.OfType<PromptSubmitted>());
+            Assert.Equal(new DateTimeOffset(2026, 11, 14, 3, 20, 0, TimeSpan.Zero), prompt.Timestamp);
+            Assert.Equal("Portfólio pessoal minimalista", Assert.Single(events.OfType<TitleIdentified>()).Title);
+            Assert.Equal("scratch-1", Assert.Single(events.OfType<SessionStarted>()).ProjectName);
+            Assert.IsType<ActivityStarted>(events[^1]);
+
+            // Only once: later events of the same chat are translated as usual.
+            Assert.IsType<ActivityStarted>(Assert.Single(await Translate(tool)));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 
     [Fact]
@@ -52,18 +103,13 @@ public class ClaudeCodeSourceTests
     }
 
     [Fact]
-    public async Task Stop_completes_with_the_last_message_and_measures_context()
+    public async Task Stop_completes_with_the_last_message()
     {
-        _usage.Value = 0.37;
-
         var events = await Translate("""
             {"session_id":"s1","hook_event_name":"Stop","transcript_path":"C:\\t.jsonl","last_assistant_message":"Done ✓"}
             """);
 
-        Assert.Equal(2, events.Count);
-        Assert.Equal("Done ✓", Assert.IsType<ResponseCompleted>(events[0]).LastMessage);
-        Assert.Equal(0.37, Assert.IsType<ContextUsageMeasured>(events[1]).Usage);
-        Assert.Equal("C:\\t.jsonl", _usage.LastPath);
+        Assert.Equal("Done ✓", Assert.IsType<ResponseCompleted>(Assert.Single(events)).LastMessage);
     }
 
     [Fact]
@@ -175,18 +221,5 @@ public class ClaudeCodeSourceTests
 
         public ValueTask<DateTimeOffset?> ReadInterruptionAsync(string transcriptPath, CancellationToken cancellationToken) =>
             ValueTask.FromResult(Results.TryGetValue(transcriptPath, out var at) ? at : (DateTimeOffset?)null);
-    }
-
-    private sealed class FakeUsageReader : ITranscriptUsageReader
-    {
-        public double? Value { get; set; }
-
-        public string? LastPath { get; private set; }
-
-        public ValueTask<double?> ReadContextUsageAsync(string transcriptPath, CancellationToken cancellationToken)
-        {
-            LastPath = transcriptPath;
-            return ValueTask.FromResult(Value);
-        }
     }
 }

@@ -23,7 +23,7 @@ Por padrão ele usa as cores do terminal do Claude Code: texto creme sobre carv�
 
 | | |
 |---|---|
-| **Trabalhando.** A aba acesa é a que está no feed. Você vê a ação atual, o tempo do prompt e quanto do contexto já foi usado. | <img src="docs/images/state-running-pt.png" alt="Rodando"> |
+| **Trabalhando.** A aba acesa é a que está no feed. Você vê a ação atual e há quanto tempo o prompt está rodando. | <img src="docs/images/state-running-pt.png" alt="Rodando"> |
 | **Precisa de você.** Um pedido de permissão ou uma pergunta deixa a aba e o feed em dourado piscando, e essa sessão passa na frente das outras. | <img src="docs/images/state-waiting-pt.png" alt="Aguardando aprovação"> |
 | **Pronto.** A aba mostra `✓` e o painel pisca verde **até você abrir o app da sessão** (Claude ou VS Code), com a duração e a última resposta. | <img src="docs/images/state-done-pt.png" alt="Concluído"> |
 
@@ -38,8 +38,8 @@ Também dá pra trocar para um mini painel no canto (os cliques passam para o v�
 ## Recursos
 
 - **Aparece só quando é útil.** Some enquanto você vê o app em que cada sessão roda, inclusive em tela dividida com outro app. Aparece quando ele está minimizado, coberto ou em outra área de trabalho virtual. Uma sessão no VS Code segue a janela do VS Code, então abrir o app do Claude não a esconde.
-- **Várias sessões num relance.** Abas numeradas e com nome, com símbolos que dá pra ler mesmo sem distinguir cor: `▸` rodando, `✓` concluída, `!` aguardando.
-- **Detalhes ao vivo.** Ação atual (editando arquivo, rodando comando, buscando), última resposta, cronômetro do prompt e uso do contexto.
+- **Várias sessões num relance.** Abas numeradas com o título do chat (o mesmo da lista de chats do Claude; sem título, o nome da pasta), com símbolos que dá pra ler mesmo sem distinguir cor: `▸` rodando, `✓` concluída, `!` aguardando.
+- **Detalhes ao vivo.** Ação atual (editando arquivo, rodando comando, buscando), última resposta e cronômetro do prompt.
 - **Do seu jeito.** Na barra de tarefas, flutuando logo acima dela, ou livre em qualquer lugar da tela, com ímã nas bordas. Cada modo lembra a própria posição.
 - **Um som curto quando importa.** Duas notas subindo quando uma sessão termina, a mesma nota duas vezes quando uma precisa de você, mesmo por cima de um vídeo em tela cheia. Só enquanto o app daquela sessão está fora de vista. Três timbres (suave, retrô, sino) que acompanham o tema, ou escolha um; cada som pode ser desligado.
 - **Sete temas, troca na hora.** Claude Code por padrão, além de visuais de terminal, LED e modernos, ou [o seu próprio](#crie-o-seu-próprio-tema) num pequeno arquivo JSON.
@@ -77,7 +77,7 @@ Todos os campos são opcionais, menos `name`. O que ficar de fora usa o valor do
 | `name` | Nome no menu (obrigatório, até 40 caracteres) |
 | `background`, `border` | Fundo e contorno do painel |
 | `foreground` | Texto principal e abas rodando |
-| `dim` | Texto secundário (uso do contexto, abas paradas) |
+| `dim` | Texto secundário (abas paradas) |
 | `attention` | "Aguardando você": precisa se destacar do `foreground` |
 | `done` | Abas concluídas, o piscar verde e a borda luminosa |
 | `tabBackground` | Fundo das abas não selecionadas |
@@ -147,7 +147,7 @@ Hook do Claude Code ──stdin──▶ TaskbarLed.Hook.exe ──named pipe─
 ```
 
 - **Ponte de hook.** Um executável minúsculo que os hooks do Claude Code chamam. Ele repassa o evento bruto em cerca de 65 ms, nunca imprime nada e sempre sai com código 0. Por isso nunca atrasa nem quebra o Claude.
-- **Tradução.** Todo o conhecimento sobre o Claude Code fica numa única classe (`ClaudeCodeSource`), coberta por testes. O uso de contexto vem do final do histórico da conversa.
+- **Tradução.** Todo o conhecimento sobre o Claude Code fica numa única classe (`ClaudeCodeSource`), coberta por testes. O título de cada chat vem do final do histórico da conversa.
 - **Visibilidade.** O app percorre a ordem das janelas para medir quanto da janela do Claude você realmente vê, e verifica se há algo em tela cheia em cada monitor.
 
 O desenho completo está em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), em inglês.

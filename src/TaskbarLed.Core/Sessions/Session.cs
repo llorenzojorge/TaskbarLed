@@ -10,7 +10,6 @@ namespace TaskbarLed.Core.Sessions;
 /// <param name="PromptEndedAt">When the last prompt finished; null while running.</param>
 /// <param name="Activity">What the agent is doing right now, already phrased for display.</param>
 /// <param name="LastMessage">Last text the agent wrote, if known.</param>
-/// <param name="ContextUsage">Fraction (0..1) of the context window in use, if known.</param>
 /// <param name="LastUpdated">Timestamp of the last event applied.</param>
 /// <param name="Host">The app the session runs in, which decides what "Claude is in sight" means for it.</param>
 public sealed record Session(
@@ -23,7 +22,6 @@ public sealed record Session(
     DateTimeOffset? PromptEndedAt,
     string? Activity,
     string? LastMessage,
-    double? ContextUsage,
     DateTimeOffset LastUpdated,
     SessionHost Host = SessionHost.Unknown)
 {
@@ -35,7 +33,7 @@ public sealed record Session(
 
     /// <summary>Creates an idle session with no history.</summary>
     public static Session Create(string id, string sourceId, DateTimeOffset at) =>
-        new(id, sourceId, null, null, SessionStatus.Idle, null, null, null, null, null, at);
+        new(id, sourceId, null, null, SessionStatus.Idle, null, null, null, null, at);
 
     /// <summary>Time spent on the current prompt, or on the last one once it finished.</summary>
     public TimeSpan? Elapsed(DateTimeOffset now)

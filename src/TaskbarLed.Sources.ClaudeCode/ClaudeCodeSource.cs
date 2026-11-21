@@ -14,17 +14,21 @@ public sealed class ClaudeCodeSource : ISessionSource
     public const string Id = "claude-code";
 
     private readonly ToolActivityFormatter _formatter;
-    private readonly ITranscriptUsageReader _usageReader;
     private readonly ITranscriptInterruptionReader _interruptionReader;
+    private readonly ITranscriptInfoReader _infoReader;
     private readonly ConcurrentDictionary<string, string> _transcripts = new(StringComparer.Ordinal);
+
+    // Sessions this source has already reported, so the first event of any other one can catch up.
+    private readonly ConcurrentDictionary<string, byte> _introduced = new(StringComparer.Ordinal);
+
     public ClaudeCodeSource(
         ToolActivityFormatter formatter,
-        ITranscriptUsageReader usageReader,
-        ITranscriptInterruptionReader? interruptionReader = null)
+        ITranscriptInterruptionReader? interruptionReader = null,
+        ITranscriptInfoReader? infoReader = null)
     {
         _formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
-        _usageReader = usageReader ?? throw new ArgumentNullException(nameof(usageReader));
         _interruptionReader = interruptionReader ?? new TranscriptInterruptionReader();
+        _infoReader = infoReader ?? new TranscriptInfoReader();
     }
 
     public string SourceId => Id;
@@ -76,10 +80,12 @@ public sealed class ClaudeCodeSource : ISessionSource
         {
             case "SessionStart":
                 events.Add(new SessionStarted(sessionId, Id, receivedAt, project));
+                await AddTitleAsync(events, payload, sessionId, receivedAt, cancellationToken).ConfigureAwait(false);
                 break;
 
             case "UserPromptSubmit":
                 events.Add(new PromptSubmitted(sessionId, Id, receivedAt, Text(payload, "session_title"), project));
+                await AddTitleAsync(events, payload, sessionId, receivedAt, cancellationToken).ConfigureAwait(false);
                 break;
 
             case "PreToolUse":
@@ -93,7 +99,6 @@ public sealed class ClaudeCodeSource : ISessionSource
 
             case "PostToolUse":
                 events.Add(new ActivityFinished(sessionId, Id, receivedAt));
-                await AddContextUsageAsync(events, payload, sessionId, receivedAt, cancellationToken).ConfigureAwait(false);
                 break;
 
             case "Notification":
@@ -106,16 +111,22 @@ public sealed class ClaudeCodeSource : ISessionSource
 
             case "Stop":
                 events.Add(new ResponseCompleted(sessionId, Id, receivedAt, Text(payload, "last_assistant_message")));
-                await AddContextUsageAsync(events, payload, sessionId, receivedAt, cancellationToken).ConfigureAwait(false);
+                await AddTitleAsync(events, payload, sessionId, receivedAt, cancellationToken).ConfigureAwait(false);
                 break;
 
             case "SessionEnd":
                 events.Add(new SessionEnded(sessionId, Id, receivedAt));
                 _transcripts.TryRemove(sessionId, out _);
+                _introduced.TryRemove(sessionId, out _);
                 return events;
 
             default:
                 break;
+        }
+
+        if (events.Count > 0 && _introduced.TryAdd(sessionId, 0) && hookEvent is not ("SessionStart" or "UserPromptSubmit"))
+        {
+            events.InsertRange(0, await CatchUpAsync(payload, sessionId, receivedAt, project, cancellationToken).ConfigureAwait(false));
         }
 
         // Alongside every real event, so a session the panel pruned and sees again still knows its app.
@@ -167,7 +178,8 @@ public sealed class ClaudeCodeSource : ISessionSource
         return !message.Contains("waiting for your input", StringComparison.OrdinalIgnoreCase);
     }
 
-    private async Task AddContextUsageAsync(
+    // The chat's title (named after the first prompt, or renamed by the user) tells chats apart better than their folder.
+    private async Task AddTitleAsync(
         List<SessionEvent> events,
         JsonElement payload,
         string sessionId,
@@ -175,10 +187,45 @@ public sealed class ClaudeCodeSource : ISessionSource
         CancellationToken cancellationToken)
     {
         if (Text(payload, "transcript_path") is { } path
-            && await _usageReader.ReadContextUsageAsync(path, cancellationToken).ConfigureAwait(false) is { } usage)
+            && await _infoReader.ReadAsync(path, cancellationToken).ConfigureAwait(false) is { Title: { } title })
         {
-            events.Add(new ContextUsageMeasured(sessionId, Id, at, usage));
+            events.Add(new TitleIdentified(sessionId, Id, at, title));
         }
+    }
+
+    /// <summary>
+    /// First event of a session that began before the panel was running (Windows start, update, crash):
+    /// a tool or stop event says nothing of the chat's name or of when its prompt started. The transcript
+    /// does, so the tab gets its title and the timer counts from the real prompt, not from now.
+    /// </summary>
+    private async Task<List<SessionEvent>> CatchUpAsync(
+        JsonElement payload,
+        string sessionId,
+        DateTimeOffset receivedAt,
+        string? project,
+        CancellationToken cancellationToken)
+    {
+        var info = Text(payload, "transcript_path") is { } path
+            ? await _infoReader.ReadAsync(path, cancellationToken).ConfigureAwait(false)
+            : null;
+
+        var events = new List<SessionEvent>(3);
+        if (project is not null)
+        {
+            events.Add(new SessionStarted(sessionId, Id, receivedAt, project));
+        }
+
+        if (info?.LastPromptAt is { } promptAt && promptAt <= receivedAt)
+        {
+            events.Add(new PromptSubmitted(sessionId, Id, promptAt, null, project));
+        }
+
+        if (info?.Title is { } title)
+        {
+            events.Add(new TitleIdentified(sessionId, Id, receivedAt, title));
+        }
+
+        return events;
     }
 
     private static string? ProjectName(string? cwd) =>

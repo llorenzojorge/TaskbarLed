@@ -79,5 +79,7 @@ Opções avaliadas:
 1. Exibir apenas o uso do contexto (100% local, sem riscos) e deixar o limite do plano como recurso futuro.
 2. Consultar o endpoint de uso da conta usando o token OAuth local do Claude Code: dado real, mas implica ler credenciais do usuário — exige opt-in explícito e cuidado num projeto open source.
 3. Para usuários da CLI no terminal, usar a status line (onde ela é executada).
+
+**Revisto (2026-11-21): o uso do contexto saiu do painel.** O número divergia do que o app do Claude mostra (85% no painel, 29% no app para o mesmo chat): o cálculo supunha a janela de contexto a partir do nome do modelo, e isso não acompanha os modelos atuais. Um número errado confunde mais do que ajuda. O limite do plano continua fora (opção 2 rejeitada de novo: exigiria ler o token da conta e acessar a rede). No lugar, o cronômetro do prompt desceu para a linha do feed e as abas ganharam a linha de cima inteira para os títulos dos chats.
 | .NET 10 SDK | ⏳ Instalado apenas o .NET 8; .NET 10 precisa ser instalado |
 | Janela do Claude identificável | ✅ Processo `claude.exe` (pacote MSIX), janela com título "Claude" |
