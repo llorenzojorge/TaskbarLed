@@ -62,6 +62,66 @@ public class PanelLayoutTests
         Assert.Equal(Taskbar.Right, rect.Right);
     }
 
+    // Windows 11 with centered icons: Start at 762, nine apps, tray on the right.
+    private static readonly PixelRect[] Items =
+    [
+        PixelRect.FromSize(762, 1032, 45, 48),   // Start
+        PixelRect.FromSize(807, 1032, 352, 48),  // apps up to 1159
+        PixelRect.FromSize(1706, 1032, 214, 48), // tray
+    ];
+
+    [Fact]
+    public void Taskbar_mode_shrinks_away_from_a_start_button_that_slid_under_it()
+    {
+        // Saved at 361..775: Start moved left when more apps opened and now starts at 762.
+        var rect = PanelLayout.Compute(InTaskbar(361, 414), Monitor, Taskbar, 1.0, Items);
+
+        Assert.Equal(361, rect.Left);
+        Assert.Equal(762 - 4, rect.Right);
+    }
+
+    [Fact]
+    public void Taskbar_mode_keeps_the_saved_spot_when_the_buttons_are_out_of_the_way()
+    {
+        var rect = PanelLayout.Compute(InTaskbar(361, 300), Monitor, Taskbar, 1.0, Items);
+
+        Assert.Equal(new PixelRect(361, 1038, 661, 1074), rect);
+    }
+
+    [Fact]
+    public void Taskbar_mode_moves_off_the_buttons_once_it_cannot_shrink_further()
+    {
+        var rect = PanelLayout.Compute(InTaskbar(700, 420), Monitor, Taskbar, 1.0, Items);
+
+        Assert.Equal(762 - 4, rect.Right);
+        Assert.Equal(160, rect.Width);
+    }
+
+    [Fact]
+    public void Taskbar_mode_never_covers_a_button_at_any_dpi()
+    {
+        var monitor = new PixelRect(0, 0, 3840, 2160);
+        var taskbar = new PixelRect(0, 2088, 3840, 2160);
+        PixelRect[] items = [PixelRect.FromSize(1500, 2088, 800, 72), PixelRect.FromSize(3400, 2088, 440, 72)];
+
+        foreach (var x in new[] { 0, 500, 900, 1200, 1600, 2000 })
+        {
+            var rect = PanelLayout.Compute(InTaskbar(x, 420), monitor, taskbar, 1.5, items);
+            Assert.All(items, item => Assert.True(rect.Intersect(item).IsEmpty, $"x={x}: {rect} covers {item}"));
+            Assert.True(rect.Width >= 240, $"x={x}: {rect} is narrower than the minimum");
+        }
+    }
+
+    [Fact]
+    public void Taskbar_items_do_not_change_the_saved_position()
+    {
+        var settings = InTaskbar(361, 414);
+        var rect = PanelLayout.Compute(settings, Monitor, Taskbar, 1.0, Items);
+
+        Assert.Equal(414, settings.CurrentPosition.Width);
+        Assert.NotEqual(414, rect.Width);
+    }
+
     [Fact]
     public void Above_mode_floats_over_the_taskbar_with_the_gap()
     {

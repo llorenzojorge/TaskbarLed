@@ -29,12 +29,19 @@ public static class PanelLayout
     /// <summary>Mini panel width in full screen, in DIP.</summary>
     public const double MiniWidthDip = 340;
 
+    /// <summary>Space kept between the panel (halo included) and any taskbar button, in DIP.</summary>
+    public const double ItemClearanceDip = 4;
+
     /// <summary>Panel rectangle for <paramref name="settings"/> on a monitor.</summary>
     /// <param name="settings">Placement and remembered positions.</param>
     /// <param name="monitor">Monitor rectangle.</param>
     /// <param name="taskbar">The monitor's taskbar, if any.</param>
     /// <param name="scale">Monitor scale factor (1.0 = 96 DPI).</param>
-    public static PixelRect Compute(PanelSettings settings, PixelRect monitor, PixelRect? taskbar, double scale)
+    /// <param name="taskbarItems">
+    /// Buttons on the taskbar (Start, apps, tray). In taskbar mode the panel never covers them:
+    /// see <see cref="AvoidItems"/>. Null or empty keeps the saved position as is.
+    /// </param>
+    public static PixelRect Compute(PanelSettings settings, PixelRect monitor, PixelRect? taskbar, double scale, IReadOnlyList<PixelRect>? taskbarItems = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(scale, 0);
@@ -44,7 +51,7 @@ public static class PanelLayout
 
         return settings.Placement switch
         {
-            PanelPlacement.Taskbar when bar is { } b => InTaskbar(b, scale, position),
+            PanelPlacement.Taskbar when bar is { } b => AvoidItems(InTaskbar(b, scale, position), b, taskbarItems, scale),
             PanelPlacement.Taskbar or PanelPlacement.AboveTaskbar => AboveTaskbar(bar, monitor, scale, position, settings.AboveGap),
             _ => Free(monitor, scale, position),
         };
@@ -151,6 +158,85 @@ public static class PanelLayout
         var isBottom = bar.Width >= monitor.Width / 2 && bar.Bottom >= monitor.Bottom - 1;
         return !onScreen.IsEmpty && onScreen.Height >= bar.Height / 2 && isBottom ? bar : null;
     }
+
+    /// <summary>
+    /// Keeps a taskbar-mode panel off the taskbar's buttons. Windows 11 centers its icons, so the Start
+    /// button moves left as apps open and can slide under a panel saved next to it. The panel stays in the
+    /// free stretch it is mostly in, with <see cref="ItemClearanceDip"/> on each side (the blinking halo is
+    /// drawn inside the window, so it never reaches a button either): it shrinks first, down to
+    /// <see cref="MinWidthDip"/>, then moves away from the button. When that stretch is too small it goes
+    /// to the widest one. The saved position is not changed, so the panel grows back when there is room.
+    /// </summary>
+    /// <param name="panel">Panel rectangle from the saved position.</param>
+    /// <param name="taskbar">The taskbar the panel sits in.</param>
+    /// <param name="items">Taskbar buttons, in physical pixels. Items outside the taskbar row are ignored.</param>
+    /// <param name="scale">Monitor scale factor.</param>
+    public static PixelRect AvoidItems(PixelRect panel, PixelRect taskbar, IReadOnlyList<PixelRect>? items, double scale)
+    {
+        if (items is null || items.Count == 0)
+        {
+            return panel;
+        }
+
+        var gaps = FreeStretches(taskbar, items, (int)Math.Round(ItemClearanceDip * scale));
+        if (gaps.Count == 0)
+        {
+            return panel; // Nowhere free at all: keep the user's spot rather than vanish.
+        }
+
+        var minWidth = Math.Min((int)Math.Round(MinWidthDip * scale), panel.Width);
+        var gap = gaps
+            .Where(g => g.Right - g.Left >= minWidth)
+            .OrderByDescending(g => Overlap(g, panel))
+            .ThenBy(g => Distance(g, panel))
+            .Select(g => ((int Left, int Right)?)g)
+            .FirstOrDefault() ?? gaps.MaxBy(g => g.Right - g.Left);
+
+        var left = Math.Max(panel.Left, gap.Left);
+        var right = Math.Min(panel.Right, gap.Right);
+        if (right - left < minWidth)
+        {
+            // Too thin where it is: keep the minimum width, pushed back inside the stretch.
+            left = Math.Clamp(Math.Min(left, right - minWidth), gap.Left, Math.Max(gap.Left, gap.Right - minWidth));
+            right = Math.Min(gap.Right, left + minWidth);
+        }
+
+        return panel with { Left = left, Right = right };
+    }
+
+    // Horizontal stretches of the taskbar not covered by any item (each widened by the clearance).
+    private static List<(int Left, int Right)> FreeStretches(PixelRect taskbar, IReadOnlyList<PixelRect> items, int clearance)
+    {
+        var blocked = items
+            .Where(i => !i.Intersect(taskbar).IsEmpty)
+            .Select(i => (Left: i.Left - clearance, Right: i.Right + clearance))
+            .OrderBy(i => i.Left);
+
+        var gaps = new List<(int Left, int Right)>();
+        var cursor = taskbar.Left;
+        foreach (var (left, right) in blocked)
+        {
+            if (left > cursor)
+            {
+                gaps.Add((cursor, Math.Min(left, taskbar.Right)));
+            }
+
+            cursor = Math.Max(cursor, right);
+        }
+
+        if (cursor < taskbar.Right)
+        {
+            gaps.Add((cursor, taskbar.Right));
+        }
+
+        return gaps;
+    }
+
+    private static int Overlap((int Left, int Right) gap, PixelRect panel) =>
+        Math.Max(0, Math.Min(gap.Right, panel.Right) - Math.Max(gap.Left, panel.Left));
+
+    private static int Distance((int Left, int Right) gap, PixelRect panel) =>
+        Math.Max(0, Math.Max(gap.Left - panel.Right, panel.Left - gap.Right));
 
     private static PixelRect InTaskbar(PixelRect taskbar, double scale, PanelPosition position)
     {

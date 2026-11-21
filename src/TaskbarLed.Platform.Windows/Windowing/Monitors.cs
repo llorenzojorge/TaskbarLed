@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using TaskbarLed.Core.Visibility;
 using static TaskbarLed.Platform.Windows.Native.NativeMethods;
 
@@ -11,7 +11,8 @@ namespace TaskbarLed.Platform.Windows.Windowing;
 /// <param name="Bounds">Monitor rectangle in physical pixels.</param>
 /// <param name="Taskbar">Taskbar rectangle on this monitor, if it has one.</param>
 /// <param name="Dpi">Effective DPI (96 = 100%).</param>
-public sealed record MonitorInfo(nint Handle, string DeviceName, bool IsPrimary, PixelRect Bounds, PixelRect? Taskbar, uint Dpi)
+/// <param name="TaskbarItems">Buttons on this monitor's taskbar (Start, apps, tray), from <see cref="TaskbarButtonWatcher"/>.</param>
+public sealed record MonitorInfo(nint Handle, string DeviceName, bool IsPrimary, PixelRect Bounds, PixelRect? Taskbar, uint Dpi, IReadOnlyList<PixelRect>? TaskbarItems = null)
 {
     public double Scale => Dpi / 96d;
 }

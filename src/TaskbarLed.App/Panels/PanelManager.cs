@@ -118,7 +118,7 @@ public sealed class PanelManager : IDisposable
             window.Opacity = mini ? MiniOpacity : 1;
             window.Place(mini
                 ? PanelLayout.MiniCorner(monitor.Bounds, monitor.Scale)
-                : PanelLayout.Compute(_settings, monitor.Bounds, monitor.Taskbar, monitor.Scale));
+                : PanelLayout.Compute(_settings, monitor.Bounds, monitor.Taskbar, monitor.Scale, monitor.TaskbarItems));
             window.KeepOnTop();
         }
     }
@@ -165,6 +165,7 @@ public sealed class PanelManager : IDisposable
 
         var monitor = window.Monitor;
         var origin = _dragOrigin ??= _settings;
+        // The drag edits the saved spot; taskbar buttons only trim what is shown (see PanelLayout.AvoidItems).
         var originRect = PanelLayout.Compute(origin, monitor.Bounds, monitor.Taskbar, monitor.Scale);
 
         // Taskbar modes keep the panel on its row; only Free mode moves vertically.
@@ -184,7 +185,7 @@ public sealed class PanelManager : IDisposable
         // Move every panel right away so the drag feels attached to the mouse.
         foreach (var w in _windows.Values.Where(w => w.IsVisible))
         {
-            w.Place(PanelLayout.Compute(_settings, w.Monitor.Bounds, w.Monitor.Taskbar, w.Monitor.Scale));
+            w.Place(PanelLayout.Compute(_settings, w.Monitor.Bounds, w.Monitor.Taskbar, w.Monitor.Scale, w.Monitor.TaskbarItems));
         }
 
         SettingsEdited?.Invoke(this, _settings);

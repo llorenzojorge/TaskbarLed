@@ -52,6 +52,7 @@ public sealed class AppHost : IDisposable
     private readonly AlertDetector _alerts;
     private readonly SoundCueSelector _soundCues = new();
     private readonly WavePlayer _sound = new();
+    private TaskbarButtonWatcher? _taskbarButtons;
     private readonly DispatcherTimer _visibilityTimer;
     private readonly DispatcherTimer _frameTimer;
     private readonly DispatcherTimer _pruneTimer;
@@ -119,6 +120,7 @@ public sealed class AppHost : IDisposable
 
         EnsureAutoStart();
         EnsureClaudeCodeHooks();
+        _taskbarButtons = new TaskbarButtonWatcher(ex => _log.Error("Could not read the taskbar buttons.", ex));
 
         _store.Changed += (_, _) => ScheduleFrame();
         _server.Faulted += (_, ex) => _log.Error("IPC listener fault.", ex);
@@ -163,6 +165,7 @@ public sealed class AppHost : IDisposable
         _stop.Cancel();
         _server.Stop();
 
+        _taskbarButtons?.Dispose();
         _panels.Dispose();
         _overlays.Dispose();
         _sound.Dispose();
@@ -300,7 +303,7 @@ public sealed class AppHost : IDisposable
 
             var panel = _settings.Panel;
             _panels.Settings = panel;
-            _monitors = Monitors.All();
+            _monitors = [.. Monitors.All().Select(m => m with { TaskbarItems = _taskbarButtons?.On(m.Taskbar) })];
             _targets = PanelManager.Targets(_monitors, panel);
             _fullscreen = _targets.ToDictionary(m => m.Handle, FullscreenDetector.Detect);
 
