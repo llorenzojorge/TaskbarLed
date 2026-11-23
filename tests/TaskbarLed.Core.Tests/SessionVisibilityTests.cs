@@ -40,6 +40,21 @@ public class SessionVisibilityTests
     }
 
     [Fact]
+    public void Minimizing_one_of_two_vs_code_windows_shows_the_panel_for_the_session_running_in_it()
+    {
+        var sessions = new[]
+        {
+            Running("s1", SessionHost.VsCode, "prospect"),
+            Running("s2", SessionHost.VsCode, "webapp"),
+        };
+        var windows = new HostWindows(0, [ProspectWindow, WebappWindow]); // webapp minimized, prospect on screen.
+
+        Assert.True(SessionVisibility.AnyOutOfSight(sessions, windows, Threshold));
+        Assert.True(SessionVisibility.IsInSight(sessions[0], windows, Threshold));
+        Assert.False(SessionVisibility.IsInSight(sessions[1], windows, Threshold));
+    }
+
+    [Fact]
     public void Without_a_title_match_the_most_visible_editor_counts()
     {
         var session = Running("s1", SessionHost.VsCode, "unknown-folder");

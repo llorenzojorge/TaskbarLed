@@ -98,6 +98,7 @@ public sealed class AppHost : IDisposable
         _viewModel = new PanelViewModel(_strings.EditHint, _culture) { SaveLabel = _strings.Save, CancelLabel = _strings.Cancel };
         _panels = new PanelManager(_viewModel, _settings.Panel);
         _panels.OpenRequested += (_, _) => OpenClaude();
+        _panels.TabOpenRequested += (_, id) => OpenTab(id);
         _panels.NextRequested += (_, _) => { _composer.Rotation.Skip(); RenderFrame(); };
         _panels.MenuRequested += (_, _) => _tray?.ShowMenuAtCursor();
         _panels.SettingsEdited += (_, panel) => _settings = _settings with { Panel = panel };
@@ -438,12 +439,28 @@ public sealed class AppHost : IDisposable
         }
     }
 
-    // Opens the app of the session in the feed: VS Code for a VS Code session, Claude otherwise.
-    private void OpenClaude()
+    // A click on the feed (or an alert, or the tray): a finished session first, else the one in the feed.
+    private void OpenClaude() => OpenSession(ClickTarget.ForFeed(_store.Snapshot(), _selectedSessionId));
+
+    // A click on a tab: that session goes to the feed and its app comes to the front.
+    private void OpenTab(string sessionId)
     {
-        var selected = _store.Snapshot().FirstOrDefault(s => s.Id == _selectedSessionId);
-        if (selected is { Host: SessionHost.VsCode }
-            && SessionVisibility.EditorFor(selected, _hostWindows.Editors) is { } editor)
+        var session = ClickTarget.ForTab(_store.Snapshot(), sessionId);
+        if (session is not null)
+        {
+            _composer.Rotation.Show(session.Id, DateTimeOffset.Now);
+            RenderFrame();
+        }
+
+        OpenSession(session);
+    }
+
+    // Brings up the app the session runs in: its project's VS Code window, Claude otherwise. Only the window:
+    // reopening a conversation could start a second copy of one already running elsewhere.
+    private void OpenSession(Session? session)
+    {
+        if (session is { Host: SessionHost.VsCode }
+            && SessionVisibility.EditorFor(session, _hostWindows.Editors) is { } editor)
         {
             WindowActions.Activate(editor.Handle);
         }

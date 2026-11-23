@@ -120,7 +120,8 @@ TaskbarLed asks before connecting to Claude Code. It adds its hooks to `~/.claud
 
 | To… | Do this |
 |---|---|
-| Open Claude | Click the panel, an alert or the tray icon |
+| Open a session | Click its tab: its VS Code window or Claude comes to the front |
+| Open what finished | Click the feed line, an alert or the tray icon: a finished session first, else the one in the feed |
 | See the next session | Scroll over the panel |
 | Open the menu | Right-click the panel or the tray icon |
 | Move or resize | Menu → **Edit position and size**. Drag to move, drag the right edge to resize, arrow keys for 1 px steps (Shift for 10 px). Finish with the **Save** or **Cancel** button on the panel, or Enter / Esc |

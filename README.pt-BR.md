@@ -120,7 +120,8 @@ O TaskbarLed pede permissão antes de se conectar ao Claude Code. Ele adiciona h
 
 | Para… | Faça isso |
 |---|---|
-| Abrir o Claude | Clique no painel, num aviso ou no ícone da bandeja |
+| Abrir uma sessão | Clique na aba dela: a janela do VS Code dela ou o Claude vem para a frente |
+| Abrir o que terminou | Clique na linha do feed, num aviso ou no ícone da bandeja: primeiro uma sessão concluída; se não houver, a que está no feed |
 | Ver a próxima sessão | Role a roda do mouse sobre o painel |
 | Abrir o menu | Botão direito no painel ou no ícone da bandeja |
 | Mover ou redimensionar | Menu → **Editar posição e tamanho**. Arraste para mover e a borda direita para redimensionar. As setas ajustam 1 px (Shift: 10 px). Termine com o botão **Salvar** ou **Cancelar** no próprio painel, ou Enter / Esc |

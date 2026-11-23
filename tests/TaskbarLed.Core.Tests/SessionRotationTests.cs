@@ -26,6 +26,27 @@ public class SessionRotationTests
     }
 
     [Fact]
+    public void A_clicked_tab_stays_in_the_feed_for_a_full_dwell()
+    {
+        Session[] sessions = [Session("a", SessionStatus.Running), Session("b", SessionStatus.Running), Session("c", SessionStatus.Completed)];
+
+        Assert.Equal("a", _rotation.Select(sessions, At(0))!.Id);
+        _rotation.Show("c", At(3));
+        Assert.Equal("c", _rotation.Select(sessions, At(3))!.Id);
+        Assert.Equal("c", _rotation.Select(sessions, At(10))!.Id);
+        Assert.Equal("a", _rotation.Select(sessions, At(11))!.Id);
+    }
+
+    [Fact]
+    public void A_clicked_tab_does_not_push_aside_a_session_waiting_for_the_user()
+    {
+        Session[] sessions = [Session("a", SessionStatus.Running), Session("b", SessionStatus.AwaitingInput)];
+
+        _rotation.Show("a", At(0));
+        Assert.Equal("b", _rotation.Select(sessions, At(0))!.Id);
+    }
+
+    [Fact]
     public void A_session_waiting_for_the_user_preempts_the_rotation()
     {
         Session[] sessions =

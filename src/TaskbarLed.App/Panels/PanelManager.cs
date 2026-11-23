@@ -28,6 +28,9 @@ public sealed class PanelManager : IDisposable
 
     public event EventHandler? OpenRequested;
 
+    /// <summary>A session tab was clicked; the argument is its session id.</summary>
+    public event EventHandler<string>? TabOpenRequested;
+
     public event EventHandler? NextRequested;
 
     public event EventHandler? MenuRequested;
@@ -138,6 +141,7 @@ public sealed class PanelManager : IDisposable
     {
         var window = new PanelWindow(_viewModel, monitor);
         window.OpenRequested += (_, _) => OpenRequested?.Invoke(this, EventArgs.Empty);
+        window.TabOpenRequested += (_, id) => TabOpenRequested?.Invoke(this, id);
         window.NextRequested += (_, _) => NextRequested?.Invoke(this, EventArgs.Empty);
         window.MenuRequested += (_, _) => MenuRequested?.Invoke(this, EventArgs.Empty);
         window.EditFinished += (_, save) => EditFinished?.Invoke(this, save);

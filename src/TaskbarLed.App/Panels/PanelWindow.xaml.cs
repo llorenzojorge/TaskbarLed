@@ -52,8 +52,11 @@ public partial class PanelWindow : Window
         View.CancelRequested += (_, _) => EditFinished?.Invoke(this, false);
     }
 
-    /// <summary>The user clicked the panel (outside edit mode).</summary>
+    /// <summary>The user clicked the feed (outside edit mode).</summary>
     public event EventHandler? OpenRequested;
+
+    /// <summary>The user clicked a session tab (outside edit mode); the argument is its session id.</summary>
+    public event EventHandler<string>? TabOpenRequested;
 
     /// <summary>The user scrolled over the panel: show the next session.</summary>
     public event EventHandler? NextRequested;
@@ -152,11 +155,26 @@ public partial class PanelWindow : Window
         }
         else if (!_viewModel.IsEditing)
         {
-            OpenRequested?.Invoke(this, EventArgs.Empty);
+            if (TabUnder(e.OriginalSource) is { SessionId.Length: > 0 } tab)
+            {
+                TabOpenRequested?.Invoke(this, tab.SessionId);
+            }
+            else
+            {
+                OpenRequested?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         e.Handled = true;
     }
+
+    // Everything inside a tab's template inherits the tab's view model as its DataContext.
+    private static ChannelViewModel? TabUnder(object source) => source switch
+    {
+        FrameworkElement { DataContext: ChannelViewModel tab } => tab,
+        FrameworkContentElement { DataContext: ChannelViewModel tab } => tab,
+        _ => null,
+    };
 
     protected override void OnMouseWheel(MouseWheelEventArgs e)
     {

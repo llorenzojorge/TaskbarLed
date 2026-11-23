@@ -46,6 +46,18 @@ public sealed class SessionRotation
     /// <summary>Jumps to the next candidate right away (e.g. the user scrolls the panel).</summary>
     public void Skip() => _shownSince = DateTimeOffset.MinValue;
 
+    /// <summary>
+    /// Puts <paramref name="sessionId"/> in the feed for one dwell (e.g. the user clicks its tab). A session
+    /// outside the current candidates (one waiting for the user preempts the rest) is skipped by
+    /// <see cref="Select"/> as usual.
+    /// </summary>
+    public void Show(string sessionId, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(sessionId);
+        _currentId = sessionId;
+        _shownSince = now;
+    }
+
     private static List<Session> Candidates(IReadOnlyList<Session> sessions)
     {
         var awaiting = sessions.Where(s => s.Status == SessionStatus.AwaitingInput).ToList();
