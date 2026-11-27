@@ -115,21 +115,9 @@
         <DataTrigger Binding="{Binding Status}" Value="{x:Static s:SessionStatus.Running}">
           <Setter TargetName="TabText" Property="Foreground" Value="{DynamicResource Led.ForegroundBrush}" />
         </DataTrigger>
+        <!-- Finished: steady green. The panel's halo does the blinking; blinking tabs too was noise. -->
         <DataTrigger Binding="{Binding Status}" Value="{x:Static s:SessionStatus.Completed}">
           <Setter TargetName="TabText" Property="Foreground" Value="{DynamicResource Led.DoneBrush}" />
-          <DataTrigger.EnterActions>
-            <BeginStoryboard x:Name="TabDone">
-              <Storyboard RepeatBehavior="Forever" Timeline.DesiredFrameRate="10">
-                <DoubleAnimationUsingKeyFrames Storyboard.TargetName="Tab" Storyboard.TargetProperty="Opacity" Duration="0:0:1">
-                  <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="1" />
-                  <DiscreteDoubleKeyFrame KeyTime="0:0:0.5" Value="0.25" />
-                </DoubleAnimationUsingKeyFrames>
-              </Storyboard>
-            </BeginStoryboard>
-          </DataTrigger.EnterActions>
-          <DataTrigger.ExitActions>
-            <StopStoryboard BeginStoryboardName="TabDone" />
-          </DataTrigger.ExitActions>
         </DataTrigger>
         <DataTrigger Binding="{Binding Status}" Value="{x:Static s:SessionStatus.AwaitingInput}">
           <Setter TargetName="TabText" Property="Foreground" Value="{DynamicResource Led.AttentionBrush}" />
@@ -161,6 +149,15 @@
           </MultiDataTrigger.Conditions>
           <Setter TargetName="Tab" Property="BorderBrush" Value="{DynamicResource Led.AttentionBrush}" />
           <Setter TargetName="TabText" Property="Foreground" Value="{DynamicResource Led.AttentionBrush}" />
+        </MultiDataTrigger>
+        <!-- Selected and finished: keep the green, and outline it in green, so the selection does not turn it white. -->
+        <MultiDataTrigger>
+          <MultiDataTrigger.Conditions>
+            <Condition Binding="{Binding IsSelected}" Value="True" />
+            <Condition Binding="{Binding Status}" Value="{x:Static s:SessionStatus.Completed}" />
+          </MultiDataTrigger.Conditions>
+          <Setter TargetName="Tab" Property="BorderBrush" Value="{DynamicResource Led.DoneBrush}" />
+          <Setter TargetName="TabText" Property="Foreground" Value="{DynamicResource Led.DoneBrush}" />
         </MultiDataTrigger>
       </DataTemplate.Triggers>
     </DataTemplate>
