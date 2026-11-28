@@ -38,6 +38,7 @@ Implement `ISessionSource` in a new `TaskbarLed.Sources.<Name>` project, with te
 
 ## Guidelines
 
+- **Read the product rules first.** [CLAUDE.md → Product rules](CLAUDE.md#product-rules-read-before-changing-what-users-see) lists what must not change by default, how themes and text work, and what every pull request must include. AI coding agents read that file too.
 - **Keep logic in Core.** If it can be tested without Windows, it belongs in `TaskbarLed.Core` or a `Sources.*` project, with tests.
 - **Never break the agent.** Hook-side code must not print, block or fail.
 - **Stay light.** No polling faster than the existing timers and no heavy dependencies: the panel runs all day.
