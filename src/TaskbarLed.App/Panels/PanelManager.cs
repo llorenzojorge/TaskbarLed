@@ -172,19 +172,28 @@ public sealed class PanelManager : IDisposable
         // The drag edits the saved spot; taskbar buttons only trim what is shown (see PanelLayout.AvoidItems).
         var originRect = PanelLayout.Compute(origin, monitor.Bounds, monitor.Taskbar, monitor.Scale);
 
-        // Taskbar modes keep the panel on its row; only Free mode moves vertically.
-        var dy = origin.Placement == PanelPlacement.Free ? e.DeltaY : 0;
-        var rect = e.Kind == EditKind.Move
-            ? new PixelRect(originRect.Left + e.DeltaX, originRect.Top + dy, originRect.Right + e.DeltaX, originRect.Bottom + dy)
-            : originRect with { Right = Math.Max(originRect.Left + 1, originRect.Right + e.DeltaX) };
-
-        if (e.Kind == EditKind.Move && origin.Placement == PanelPlacement.Free && !e.IsNudge)
+        if (e.Kind == EditKind.Move && !e.IsNudge)
         {
-            rect = PanelLayout.Snap(rect, monitor.Bounds, monitor.Taskbar, monitor.Scale);
+            // A mouse drag goes anywhere on the monitor; where the panel is decides the placement
+            // (in the taskbar, just above it, or free), live, so the panel shows where it will land.
+            // A click without movement changes nothing.
+            if (e.DeltaX != 0 || e.DeltaY != 0)
+            {
+                var dragged = new PixelRect(originRect.Left + e.DeltaX, originRect.Top + e.DeltaY, originRect.Right + e.DeltaX, originRect.Bottom + e.DeltaY);
+                _settings = PanelLayout.MoveTo(origin, dragged, monitor.Bounds, monitor.Taskbar, monitor.Scale);
+            }
         }
+        else
+        {
+            // Arrow keys nudge within the current placement: taskbar modes stay on their row.
+            var dy = origin.Placement == PanelPlacement.Free ? e.DeltaY : 0;
+            var rect = e.Kind == EditKind.Move
+                ? new PixelRect(originRect.Left + e.DeltaX, originRect.Top + dy, originRect.Right + e.DeltaX, originRect.Bottom + dy)
+                : originRect with { Right = Math.Max(originRect.Left + 1, originRect.Right + e.DeltaX) };
 
-        var position = PanelLayout.ToPosition(origin, rect, monitor.Bounds, monitor.Taskbar, monitor.Scale);
-        _settings = origin.WithCurrentPosition(position).Normalize();
+            var position = PanelLayout.ToPosition(origin, rect, monitor.Bounds, monitor.Taskbar, monitor.Scale);
+            _settings = origin.WithCurrentPosition(position).Normalize();
+        }
 
         // Move every panel right away so the drag feels attached to the mouse.
         foreach (var w in _windows.Values.Where(w => w.IsVisible))

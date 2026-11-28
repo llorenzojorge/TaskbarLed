@@ -38,7 +38,7 @@ Também dá pra trocar para um mini painel no canto (os cliques passam para o v�
 ## Recursos
 
 - **Aparece só quando é útil.** Some enquanto você vê o app em que cada sessão roda, inclusive em tela dividida com outro app. Aparece quando ele está minimizado, coberto ou em outra área de trabalho virtual. Uma sessão no VS Code segue a janela do VS Code, então abrir o app do Claude não a esconde.
-- **Várias sessões num relance.** Abas numeradas com o título do chat (o mesmo da lista de chats do Claude; sem título, o nome da pasta), com símbolos que dá pra ler mesmo sem distinguir cor: `▸` rodando, `✓` concluída, `!` aguardando.
+- **Várias sessões num relance.** Abas numeradas com o título do chat (o mesmo da lista de chats do Claude; sem título, o nome da pasta), com símbolos que dá pra ler mesmo sem distinguir cor: `▸` rodando, `✓` concluída, `!` aguardando. Um chat que você só abriu, sem nada novo há 3 minutos, libera a aba até o próximo prompt (`idleTabMinutes` no arquivo de configurações).
 - **Detalhes ao vivo.** Ação atual (editando arquivo, rodando comando, buscando), última resposta e cronômetro do prompt.
 - **Do seu jeito.** Na barra de tarefas, flutuando logo acima dela, ou livre em qualquer lugar da tela, com ímã nas bordas. Cada modo lembra a própria posição.
 - **Um som curto quando importa.** Duas notas subindo quando uma sessão termina, a mesma nota duas vezes quando uma precisa de você, mesmo por cima de um vídeo em tela cheia. Só enquanto o app daquela sessão está fora de vista. Três timbres (suave, retrô, sino) que acompanham o tema, ou escolha um; cada som pode ser desligado.
@@ -133,7 +133,7 @@ A prévia sem assinatura ou notarização exige macOS 14 ou posterior e oferece 
 | Abrir o que terminou | Clique na linha do feed, num aviso ou no ícone da bandeja: primeiro uma sessão concluída; se não houver, a que está no feed |
 | Ver a próxima sessão | Role a roda do mouse sobre o painel |
 | Abrir o menu | Botão direito no painel ou no ícone da bandeja |
-| Mover ou redimensionar | Menu → **Editar posição e tamanho**. Arraste para mover e a borda direita para redimensionar. As setas ajustam 1 px (Shift: 10 px). Termine com o botão **Salvar** ou **Cancelar** no próprio painel, ou Enter / Esc |
+| Mover ou redimensionar | Menu → **Editar posição e tamanho** (ou **Editar só a posição**, sem a alça de tamanho). Arraste o painel para qualquer lugar: solte na barra de tarefas, logo acima dela ou em qualquer outro ponto da tela para deixá-lo livre, e o modo de posição acompanha. Arraste a borda direita para redimensionar. As setas ajustam 1 px (Shift: 10 px). Termine com o botão **Salvar** ou **Cancelar** no próprio painel, ou Enter / Esc |
 | Mudar onde ele fica | Menu → **Posição**: na barra, acima da barra ou livre |
 | Mudar o comportamento em tela cheia | Menu → **Em tela cheia** |
 | Trocar ou silenciar os sons | Menu → **Som**. Cada clique toca o que você escolheu |

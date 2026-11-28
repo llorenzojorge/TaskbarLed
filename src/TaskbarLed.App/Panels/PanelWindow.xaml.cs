@@ -125,7 +125,7 @@ public partial class PanelWindow : Window
             return;
         }
 
-        _dragKind = ReferenceEquals(e.OriginalSource, View.ResizeGrip) ? EditKind.Resize : EditKind.Move;
+        _dragKind = _viewModel.CanResize && ReferenceEquals(e.OriginalSource, View.ResizeGrip) ? EditKind.Resize : EditKind.Move;
         _dragStart = ScreenPoint(e);
         CaptureMouse();
         e.Handled = true;

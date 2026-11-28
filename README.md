@@ -38,7 +38,7 @@ You can switch to a click-through mini panel, alerts only, or nothing at all. Ex
 ## Features
 
 - **Shows up only when useful.** Hidden while you can see the app each session runs in, including side by side with another app. Shown when it is minimized, covered or on another virtual desktop. A session in VS Code follows its VS Code window, so opening the Claude app does not hide it.
-- **Many sessions, one glance.** Numbered tabs named after each chat's title (the one in Claude's chat list; the folder name when there is none), with status marks you can read without color: `▸` running, `✓` done, `!` waiting.
+- **Many sessions, one glance.** Numbered tabs named after each chat's title (the one in Claude's chat list; the folder name when there is none), with status marks you can read without color: `▸` running, `✓` done, `!` waiting. A chat you only opened, with nothing new for 3 minutes, gives its tab back until its next prompt (`idleTabMinutes` in the settings file).
 - **Live details.** Current action (editing a file, running a command, searching), the last reply and the prompt timer.
 - **Place it your way.** On the taskbar, floating just above it, or anywhere on screen with edge snapping. Each placement remembers its own spot.
 - **A short sound when it matters.** Two rising notes when a session finishes, the same note twice when one needs you, even over a full-screen video. Only while that session's app is out of sight. Three voices (chime, retro, bell) that follow the theme, or pick one; each sound can be turned off.
@@ -133,7 +133,7 @@ The unsigned preview requires macOS 14 or later and supports Apple Silicon and I
 | Open what finished | Click the feed line, an alert or the tray icon: a finished session first, else the one in the feed |
 | See the next session | Scroll over the panel |
 | Open the menu | Right-click the panel or the tray icon |
-| Move or resize | Menu → **Edit position and size**. Drag to move, drag the right edge to resize, arrow keys for 1 px steps (Shift for 10 px). Finish with the **Save** or **Cancel** button on the panel, or Enter / Esc |
+| Move or resize | Menu → **Edit position and size** (or **Edit position only**, without the resize handle). Drag the panel anywhere: drop it on the taskbar, just above it, or anywhere else on the screen to float freely, and the position mode follows. Drag the right edge to resize, arrow keys for 1 px steps (Shift for 10 px). Finish with the **Save** or **Cancel** button on the panel, or Enter / Esc |
 | Change where it sits | Menu → **Position**: on the taskbar, above the taskbar, or anywhere |
 | Change full-screen behavior | Menu → **In full screen** |
 | Change or mute the sounds | Menu → **Sound**. Each click plays what you picked |

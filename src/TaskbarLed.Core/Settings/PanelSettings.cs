@@ -105,6 +105,9 @@ public sealed record PanelSettings
     /// <summary>Seconds each session stays in the feed before rotating.</summary>
     public double RotationSeconds { get; init; } = 8;
 
+    /// <summary>Minutes an idle session (finished and seen, or never prompted) keeps its tab after its last event.</summary>
+    public double IdleTabMinutes { get; init; } = 3;
+
     /// <summary>Hours without events before a session is dropped.</summary>
     public double StaleSessionHours { get; init; } = 12;
 
@@ -139,6 +142,7 @@ public sealed record PanelSettings
         AboveGap = Math.Clamp(AboveGap, 0, 200),
         VisibleThreshold = Math.Clamp(VisibleThreshold, 0.05, 0.95),
         RotationSeconds = Math.Clamp(RotationSeconds, 2, 120),
+        IdleTabMinutes = double.IsFinite(IdleTabMinutes) ? Math.Clamp(IdleTabMinutes, 0.5, 720) : 3,
         StaleSessionHours = Math.Clamp(StaleSessionHours, 0.5, 168),
         Theme = string.IsNullOrWhiteSpace(Theme) ? DefaultTheme : Theme,
         SoundStyle = Enum.IsDefined(SoundStyle) ? SoundStyle : SoundStyle.Auto,

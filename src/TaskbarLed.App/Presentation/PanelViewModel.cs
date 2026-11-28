@@ -48,6 +48,9 @@ public sealed partial class PanelViewModel : ObservableObject
     /// <summary>Tabs are updated in place so their blink animations do not restart every second.</summary>
     public ObservableCollection<ChannelViewModel> Channels { get; } = [];
 
+    /// <summary>Feed line while editing the position only (no resize grip).</summary>
+    public string MoveHint { get; init; } = "Drag to move";
+
     /// <summary>Label of the edit-mode button that keeps the new position.</summary>
     public string SaveLabel { get; init; } = "Save";
 
@@ -77,7 +80,17 @@ public sealed partial class PanelViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DisplayText))]
+    [NotifyPropertyChangedFor(nameof(ShowResizeGrip))]
     public partial bool IsEditing { get; set; }
+
+    /// <summary>The current edit may change the width ("position and size"), not only the position.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayText))]
+    [NotifyPropertyChangedFor(nameof(ShowResizeGrip))]
+    public partial bool CanResize { get; set; } = true;
+
+    /// <summary>The width handle on the right edge is shown.</summary>
+    public bool ShowResizeGrip => IsEditing && CanResize;
 
     /// <summary>One-off tip shown in the feed (e.g. the first-run "right-click to edit"); null when none.</summary>
     [ObservableProperty]
@@ -90,7 +103,7 @@ public sealed partial class PanelViewModel : ObservableObject
     public partial bool Uppercase { get; set; }
 
     /// <summary>Current feed line: edit instructions, a one-off tip, or the latest event. A change pushes a new line.</summary>
-    public string DisplayText => Cased(IsEditing ? _editHint : Hint ?? Feed);
+    public string DisplayText => Cased(IsEditing ? (CanResize ? _editHint : MoveHint) : Hint ?? Feed);
 
     /// <summary>Applies the theme's letter case to any text shown by the app (alerts, too).</summary>
     public string Cased(string text) => Uppercase ? text.ToUpper(_culture) : text;

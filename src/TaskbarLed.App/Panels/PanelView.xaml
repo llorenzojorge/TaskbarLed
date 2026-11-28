@@ -275,6 +275,6 @@
               Background="{DynamicResource Led.ChannelOffBrush}" Foreground="{DynamicResource Led.ForegroundBrush}" Click="OnCancelClick" />
     </StackPanel>
     <Rectangle x:Name="ResizeGrip" x:FieldModifier="public" Width="10" HorizontalAlignment="Right" Fill="#01000000" Cursor="SizeWE"
-               Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}" />
+               Visibility="{Binding ShowResizeGrip, Converter={StaticResource BoolToVisibility}}" />
   </Grid>
 </UserControl>

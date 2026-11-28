@@ -18,7 +18,8 @@ public sealed record TrayState(
 
 /// <summary>What the tray menu can ask the app to do.</summary>
 public sealed record TrayCommands(
-    Action ToggleEditing,
+    Action<bool> BeginEditing,
+    Action FinishEditing,
     Action<MonitorMode, string?> SelectMonitor,
     Action<PanelPlacement> SelectPlacement,
     Action<FullscreenBehavior> SelectFullscreen,
@@ -120,7 +121,16 @@ public sealed class TrayIcon : IDisposable
         var state = _state();
         _menu.Items.Clear();
 
-        _menu.Items.Add(new ToolStripMenuItem(state.IsEditing ? _strings.FinishEditing : _strings.EditPosition, null, (_, _) => _commands.ToggleEditing()));
+        if (state.IsEditing)
+        {
+            _menu.Items.Add(new ToolStripMenuItem(_strings.FinishEditing, null, (_, _) => _commands.FinishEditing()));
+        }
+        else
+        {
+            // Both drag the panel anywhere; the placement follows where it is dropped.
+            _menu.Items.Add(new ToolStripMenuItem(_strings.EditPosition, null, (_, _) => _commands.BeginEditing(true)));
+            _menu.Items.Add(new ToolStripMenuItem(_strings.EditPositionOnly, null, (_, _) => _commands.BeginEditing(false)));
+        }
 
         var placementMenu = new ToolStripMenuItem(_strings.Placement);
         foreach (var (placement, label) in new[]
