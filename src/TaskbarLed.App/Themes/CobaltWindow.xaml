@@ -7,7 +7,7 @@
   <SolidColorBrush x:Key="Led.DimBrush" Color="#3D507F" />
   <SolidColorBrush x:Key="Led.AttentionBrush" Color="#81451E" />
   <SolidColorBrush x:Key="Led.DoneBrush" Color="#285E54" />
-  <SolidColorBrush x:Key="Led.ChannelOffBrush" Color="#253E9D" />
+  <SolidColorBrush x:Key="Led.ChannelOffBrush" Color="#C6D3EC" />
   <SolidColorBrush x:Key="Led.EditBrush" Color="#2D46A8" />
   <SolidColorBrush x:Key="Led.AccentBrush" Color="#2D46A8" />
   <SolidColorBrush x:Key="Led.DotGridBrush" Color="Transparent" />

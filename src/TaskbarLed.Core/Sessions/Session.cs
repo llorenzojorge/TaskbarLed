@@ -37,7 +37,6 @@ public sealed record Session(
     /// <summary>The PID reported for the local provider process.</summary>
     public int? ProcessId { get; init; }
 
-
     /// <summary>Whether timing starts at the first local observation rather than a reported turn start.</summary>
     public bool IsElapsedApproximate { get; init; }
 

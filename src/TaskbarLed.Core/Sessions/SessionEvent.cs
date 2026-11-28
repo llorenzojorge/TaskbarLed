@@ -50,6 +50,5 @@ public sealed record SessionEnded(string SessionId, string SourceId, DateTimeOff
     : SessionEvent(SessionId, SourceId, Timestamp);
 
 /// <summary>The session is a subagent of another session.</summary>
-/// <summary>Links a worker session to its parent.</summary>
 public sealed record ParentIdentified(string SessionId, string SourceId, DateTimeOffset Timestamp, string ParentId)
     : SessionEvent(SessionId, SourceId, Timestamp);

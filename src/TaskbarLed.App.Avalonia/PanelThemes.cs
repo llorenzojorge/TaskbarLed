@@ -8,10 +8,8 @@ namespace TaskbarLed.App.Avalonia;
 
 internal static class PanelThemes
 {
-    internal sealed record Theme(string Id, string FallbackName, bool Uppercase = false)
-    {
-        public string Name => TaskbarLed.Core.Themes.ThemeNames.Get(Id, CultureInfo.CurrentUICulture) ?? FallbackName;
-    }
+    // Theme names are proper names, the same in every language and on both platforms (see ThemeCatalog).
+    internal sealed record Theme(string Id, string Name, bool Uppercase = false);
 
     private static readonly Thickness DefaultPadding = new(5, 2, 7, 1);
 
@@ -23,17 +21,17 @@ internal static class PanelThemes
         new("Mono", "Mono", true),
         new("Minimal", "Minimal"),
         new("Glass", "Glass"),
-        new("LiquidGlass", "LiquidGlass"),
+        new("LiquidGlass", "Liquid Glass"),
         new("Paper", "Paper"),
-        new("AmberTree", "AmberTree"),
-        new("CompactCharcoal", "CompactCharcoal"),
-        new("AmberRail", "AmberRail"),
-        new("ClearList", "ClearList"),
-        new("EditorialIndex", "EditorialIndex"),
-        new("CobaltWindow", "CobaltWindow"),
-        new("VioletPhosphor", "VioletPhosphor"),
-        new("LineMap", "LineMap"),
-        new("OliveLcd", "OliveLcd", Uppercase: true),
+        new("AmberTree", "Amber Tree"),
+        new("CompactCharcoal", "Compact Charcoal"),
+        new("AmberRail", "Amber Rail"),
+        new("ClearList", "Clear List"),
+        new("EditorialIndex", "Editorial Index"),
+        new("CobaltWindow", "Cobalt Window"),
+        new("VioletPhosphor", "Violet Phosphor"),
+        new("LineMap", "Line Map"),
+        new("OliveLcd", "Olive LCD", Uppercase: true),
     ];
 
     public static Theme Apply(Application app, PanelViewModel model, string themeId)

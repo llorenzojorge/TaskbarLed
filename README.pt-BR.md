@@ -42,7 +42,7 @@ Também dá pra trocar para um mini painel no canto (os cliques passam para o v�
 - **Detalhes ao vivo.** Ação atual (editando arquivo, rodando comando, buscando), última resposta e cronômetro do prompt.
 - **Do seu jeito.** Na barra de tarefas, flutuando logo acima dela, ou livre em qualquer lugar da tela, com ímã nas bordas. Cada modo lembra a própria posição.
 - **Um som curto quando importa.** Duas notas subindo quando uma sessão termina, a mesma nota duas vezes quando uma precisa de você, mesmo por cima de um vídeo em tela cheia. Só enquanto o app daquela sessão está fora de vista. Três timbres (suave, retrô, sino) que acompanham o tema, ou escolha um; cada som pode ser desligado.
-- **Sete temas, troca na hora.** Claude Code por padrão, além de visuais de terminal, LED e modernos, ou [o seu próprio](#crie-o-seu-próprio-tema) num pequeno arquivo JSON.
+- **Dezessete temas, troca na hora.** Claude Code por padrão, além de terminais, LCDs retrô, cartões claros e escuros, ou [o seu próprio](#crie-o-seu-próprio-tema) num pequeno arquivo JSON.
 - **Português e inglês.** Segue o idioma do Windows, ou você escolhe no menu.
 - **Funciona onde o Claude Code roda.** App desktop, CLI e extensões de IDE (VS Code, JetBrains) usam os mesmos hooks.
 - **Leve e privado.** Movido a eventos, cerca de 60 MB de RAM, e nada sai do seu computador.
@@ -51,14 +51,19 @@ Também dá pra trocar para um mini painel no canto (os cliques passam para o v�
 
 Botão direito no painel → **Tema**. O painel fica na tela enquanto o menu está aberto, então você vê cada tema na hora em que escolhe.
 
-São dois terminais modernos, dois visuais LED retrô e três cartões limpos:
-
 | | |
 |---|---|
 | <img src="docs/images/theme-ClaudeCode.png" alt="Claude Code"><br>**Claude Code**: terminal quente no espírito do Claude Code, com um ✻ que pulsa enquanto ele trabalha. O padrão | <img src="docs/images/theme-ModernTerminal.png" alt="Modern Terminal"><br>**Modern Terminal**: terminal escuro azul-tinta, com texto ciano liso |
-| <img src="docs/images/theme-Matrix.png" alt="Matrix"><br>**Matrix**: terminal LED verde, o visual original | <img src="docs/images/theme-Mono.png" alt="Mono"><br>**Mono**: terminal preto e branco |
 | <img src="docs/images/theme-Minimal.png" alt="Minimal"><br>**Minimal**: cartão escuro e limpo | <img src="docs/images/theme-Glass.png" alt="Glass"><br>**Glass**: sem caixa; o texto flutua sobre a barra |
-| <img src="docs/images/theme-Paper.png" alt="Paper"><br>**Paper**: claro, para barra de tarefas clara | |
+| <img src="docs/images/theme-LiquidGlass.png" alt="Liquid Glass"><br>**Liquid Glass**: cartão fumê translúcido (vidro nativo no macOS 26) | <img src="docs/images/theme-CompactCharcoal.png" alt="Compact Charcoal"><br>**Compact Charcoal**: carvão escuro com detalhes verde-claros |
+| <img src="docs/images/theme-AmberTree.png" alt="Amber Tree"><br>**Amber Tree**: cartão escuro com detalhes âmbar | <img src="docs/images/theme-AmberRail.png" alt="Amber Rail"><br>**Amber Rail**: cartão escuro com um trilho âmbar |
+| <img src="docs/images/theme-VioletPhosphor.png" alt="Violet Phosphor"><br>**Violet Phosphor**: violeta profundo com texto menta | <img src="docs/images/theme-Paper.png" alt="Paper"><br>**Paper**: claro, para barra de tarefas clara |
+| <img src="docs/images/theme-ClearList.png" alt="Clear List"><br>**Clear List**: cartão claro com detalhe verde | <img src="docs/images/theme-LineMap.png" alt="Line Map"><br>**Line Map**: cartão claro nas cores de um mapa de metrô |
+| <img src="docs/images/theme-EditorialIndex.png" alt="Editorial Index"><br>**Editorial Index**: papel creme com fonte serifada | <img src="docs/images/theme-CobaltWindow.png" alt="Cobalt Window"><br>**Cobalt Window**: cartão azul-claro com moldura cobalto |
+| <img src="docs/images/theme-OliveLcd.png" alt="Olive LCD"><br>**Olive LCD**: visor oliva de calculadora | <img src="docs/images/theme-Mono.png" alt="Mono"><br>**Mono**: terminal preto e branco |
+| <img src="docs/images/theme-Matrix.png" alt="Matrix"><br>**Matrix**: terminal LED verde, o primeiro visual do TaskbarLed | |
+
+No macOS o painel lista sessões e subagentes em linhas, então os mesmos temas ficam diferentes lá: veja a [galeria de temas do macOS](docs/MACOS-THEMES.pt-BR.md).
 
 ### Crie o seu próprio tema
 
@@ -118,7 +123,7 @@ O TaskbarLed pede permissão antes de se conectar ao Claude Code. Ele adiciona h
 
 ## macOS (prévia)
 
-A prévia sem assinatura ou notarização exige macOS 14 ou posterior e oferece versões para Apple Silicon e Intel. O painel flutuante acima do Dock mostra sessões e subagentes. [Guia do macOS](docs/MACOS.pt-BR.md) · [Galeria de temas](docs/MACOS-THEMES.md)
+A prévia sem assinatura ou notarização exige macOS 14 ou posterior e oferece versões para Apple Silicon e Intel. O painel flutuante acima do Dock mostra sessões e subagentes. [Guia do macOS](docs/MACOS.pt-BR.md) · [Galeria de temas](docs/MACOS-THEMES.pt-BR.md)
 
 ## Como usar
 

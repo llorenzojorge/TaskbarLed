@@ -27,7 +27,7 @@ The script creates a `.pkg` and a `.zip` in `artifacts/TaskbarLed-<rid>/`. Quit 
 
 TaskbarLed floats above the Dock. Activity opens the panel. The menu bar icon can keep it visible when idle. Right-click for **Themes**, **Edit position and size** or **Quit**. Choose automatic sizing or drag the right edge, bottom edge or corner in manual mode. Opacity affects the theme surface while text remains legible. Completed sessions are shown for ten seconds. Line Map keeps each route letter stable while its session is visible. Liquid Glass uses the native material on macOS 26; earlier versions use a translucent surface.
 
-Each session and subagent shows elapsed time when a start is known. A tilde marks time measured since the panel first saw an Antigravity worker. The panel displays the cumulative count
+Each session and subagent shows elapsed time when a start is known. A tilde marks time measured since the panel first saw an Antigravity worker.
 
 ## Connect agents
 

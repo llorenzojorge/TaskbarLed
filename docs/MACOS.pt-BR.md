@@ -1,6 +1,6 @@
 # TaskbarLed no macOS
 
-[English](MACOS.md) · [Galeria de temas](MACOS-THEMES.md)
+[English](MACOS.md) · [Galeria de temas](MACOS-THEMES.pt-BR.md)
 
 ## Requisitos
 

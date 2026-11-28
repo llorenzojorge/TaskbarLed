@@ -40,7 +40,7 @@ macOS port: `src/TaskbarLed.App.Avalonia/build-macos.sh` packages the live app a
 
 Other CLI flags: `--install-hooks`, `--uninstall-hooks`, `--restart` (wait for the old instance; used by the language switch).
 
-Release: push a tag `vX.Y.Z`; `.github/workflows/release.yml` builds, tests and attaches `TaskbarLed-win-x64.zip`. Repo: github.com/llorenzojorge/TaskbarLed.
+Release: push a tag `vX.Y.Z`; `.github/workflows/release.yml` builds, tests and attaches `TaskbarLed-win-x64.zip`, then a macOS job adds `TaskbarLed-osx-arm64` and `TaskbarLed-osx-x64` (`.zip` and `.pkg`) to the same release. Repo: github.com/llorenzojorge/TaskbarLed.
 
 ## Running a dev build safely
 

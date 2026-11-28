@@ -1,40 +1,40 @@
-# Temas do TaskbarLed no macOS
+# TaskbarLed themes on macOS
 
-Capturas dos 17 temas do painel renderizadas pelo TaskbarLed com duas sessões e quatro subagentes. Escolha um tema no menu **Temas** da barra.
+Screenshots of the panel's 17 themes, rendered by TaskbarLed with two sessions and four subagents. Pick a theme from the **Themes** menu in the menu bar.
 
-[Instalação no Mac](MACOS.pt-BR.md) · [Voltar ao README](../README.pt-BR.md)
+[Português do Brasil](MACOS-THEMES.pt-BR.md) · [Install on Mac](MACOS.md) · [Back to the README](../README.md)
 
-## Temas compartilhados
+## Shared themes
 
-| Mapa de Linhas | Liquid Glass |
+| Line Map | Liquid Glass |
 | --- | --- |
-| [![Mapa de Linhas](images/macos-themes/LineMap.png)](images/macos-themes/LineMap.png) | [![Liquid Glass](images/macos-themes/LiquidGlass.png)](images/macos-themes/LiquidGlass.png) |
+| [![Line Map](images/macos-themes/LineMap.png)](images/macos-themes/LineMap.png) | [![Liquid Glass](images/macos-themes/LiquidGlass.png)](images/macos-themes/LiquidGlass.png) |
 
-| Índice Editorial | Janela Cobalto |
+| Editorial Index | Cobalt Window |
 | --- | --- |
-| [![Índice Editorial](images/macos-themes/EditorialIndex.png)](images/macos-themes/EditorialIndex.png) | [![Janela Cobalto](images/macos-themes/CobaltWindow.png)](images/macos-themes/CobaltWindow.png) |
+| [![Editorial Index](images/macos-themes/EditorialIndex.png)](images/macos-themes/EditorialIndex.png) | [![Cobalt Window](images/macos-themes/CobaltWindow.png)](images/macos-themes/CobaltWindow.png) |
 
-| Fósforo Violeta | LCD Oliva |
+| Violet Phosphor | Olive LCD |
 | --- | --- |
-| [![Fósforo Violeta](images/macos-themes/VioletPhosphor.png)](images/macos-themes/VioletPhosphor.png) | [![LCD Oliva](images/macos-themes/OliveLcd.png)](images/macos-themes/OliveLcd.png) |
+| [![Violet Phosphor](images/macos-themes/VioletPhosphor.png)](images/macos-themes/VioletPhosphor.png) | [![Olive LCD](images/macos-themes/OliveLcd.png)](images/macos-themes/OliveLcd.png) |
 
-| Âmbar em árvore | Carvão compacto |
+| Amber Tree | Compact Charcoal |
 | --- | --- |
-| [![Âmbar em árvore](images/macos-themes/AmberTree.png)](images/macos-themes/AmberTree.png) | [![Carvão compacto](images/macos-themes/CompactCharcoal.png)](images/macos-themes/CompactCharcoal.png) |
+| [![Amber Tree](images/macos-themes/AmberTree.png)](images/macos-themes/AmberTree.png) | [![Compact Charcoal](images/macos-themes/CompactCharcoal.png)](images/macos-themes/CompactCharcoal.png) |
 
-| Âmbar com régua | Lista Clara |
+| Amber Rail | Clear List |
 | --- | --- |
-| [![Âmbar com régua](images/macos-themes/AmberRail.png)](images/macos-themes/AmberRail.png) | [![Lista Clara](images/macos-themes/ClearList.png)](images/macos-themes/ClearList.png) |
+| [![Amber Rail](images/macos-themes/AmberRail.png)](images/macos-themes/AmberRail.png) | [![Clear List](images/macos-themes/ClearList.png)](images/macos-themes/ClearList.png) |
 
-A captura da galeria mostra o gradiente do painel. No macOS 26, o vidro nativo do AppKit deixa passar a cor do que está atrás da janela. A linha concluída recebe um pulso neutro e desaparece após dez segundos.
+The gallery screenshot shows the panel's gradient. On macOS 26, the native AppKit glass lets the color behind the window show through. A finished row gets a neutral pulse and disappears after ten seconds.
 
-### Editor de posição, tamanho e opacidade
+### Position, size and opacity editor
 
-![Editor do TaskbarLed no macOS 26 com Liquid Glass, modo Manual e opacidade em 81%](images/macos-themes/LiquidGlassEditor.png)
+![TaskbarLed editor on macOS 26 with Liquid Glass, Manual mode and 81% opacity](images/macos-themes/LiquidGlassEditor.png)
 
-Captura do app empacotado no macOS 26.5.2. A linha concluída usa dados de teste.
+Screenshot of the packaged app on macOS 26.5.2. The finished row uses test data.
 
-## Outros temas incluídos
+## Other included themes
 
 | Claude Code | Modern Terminal |
 | --- | --- |
@@ -52,9 +52,9 @@ Captura do app empacotado no macOS 26.5.2. A linha concluída usa dados de teste
 | --- |
 | [![Paper](images/macos-themes/Paper.png)](images/macos-themes/Paper.png) |
 
-## Atualizar as capturas
+## Update the screenshots
 
-A partir da raiz do repositório, execute os testes de renderização para recriar as imagens.
+From the repository root, run the rendering tests to recreate the images.
 
 ~~~sh
 TASKBARLED_THEME_GALLERY="$PWD/docs/images/macos-themes" dotnet test tests/TaskbarLed.App.Avalonia.Tests -c Release --filter FullyQualifiedName~ThemeGalleryTests

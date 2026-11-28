@@ -42,7 +42,7 @@ You can switch to a click-through mini panel, alerts only, or nothing at all. Ex
 - **Live details.** Current action (editing a file, running a command, searching), the last reply and the prompt timer.
 - **Place it your way.** On the taskbar, floating just above it, or anywhere on screen with edge snapping. Each placement remembers its own spot.
 - **A short sound when it matters.** Two rising notes when a session finishes, the same note twice when one needs you, even over a full-screen video. Only while that session's app is out of sight. Three voices (chime, retro, bell) that follow the theme, or pick one; each sound can be turned off.
-- **Seven themes, switched live.** Claude Code by default, plus terminal, LED and modern looks, or [your own](#make-your-own-theme) from a small JSON file.
+- **Seventeen themes, switched live.** Claude Code by default, plus terminals, retro LCDs, light and dark cards, or [your own](#make-your-own-theme) from a small JSON file.
 - **English and Portuguese.** Follows Windows by default, or pick one in the menu.
 - **Works everywhere Claude Code runs.** Desktop app, CLI and IDE extensions (VS Code, JetBrains) share the same hooks.
 - **Light and private.** Event driven, about 60 MB of RAM, and nothing ever leaves your machine.
@@ -51,14 +51,19 @@ You can switch to a click-through mini panel, alerts only, or nothing at all. Ex
 
 Right-click the panel → **Theme**. The panel stays on screen while the menu is open, so you see each theme as you pick it.
 
-Two modern terminals, two retro LED looks, and three clean cards:
-
 | | |
 |---|---|
 | <img src="docs/images/theme-ClaudeCode.png" alt="Claude Code"><br>**Claude Code**: warm terminal in the spirit of Claude Code, with a pulsing ✻ while it works. The default | <img src="docs/images/theme-ModernTerminal.png" alt="Modern Terminal"><br>**Modern Terminal**: ink-blue dark terminal with smooth cyan text |
-| <img src="docs/images/theme-Matrix.png" alt="Matrix"><br>**Matrix**: green LED terminal, the original look | <img src="docs/images/theme-Mono.png" alt="Mono"><br>**Mono**: black-and-white terminal |
 | <img src="docs/images/theme-Minimal.png" alt="Minimal"><br>**Minimal**: clean dark card | <img src="docs/images/theme-Glass.png" alt="Glass"><br>**Glass**: no box; text floats on the taskbar |
-| <img src="docs/images/theme-Paper.png" alt="Paper"><br>**Paper**: light, for a light taskbar | |
+| <img src="docs/images/theme-LiquidGlass.png" alt="Liquid Glass"><br>**Liquid Glass**: translucent smoked card (native glass on macOS 26) | <img src="docs/images/theme-CompactCharcoal.png" alt="Compact Charcoal"><br>**Compact Charcoal**: dark charcoal with soft green accents |
+| <img src="docs/images/theme-AmberTree.png" alt="Amber Tree"><br>**Amber Tree**: dark card with amber accents | <img src="docs/images/theme-AmberRail.png" alt="Amber Rail"><br>**Amber Rail**: dark card with an amber rail |
+| <img src="docs/images/theme-VioletPhosphor.png" alt="Violet Phosphor"><br>**Violet Phosphor**: deep violet with mint text | <img src="docs/images/theme-Paper.png" alt="Paper"><br>**Paper**: light, for a light taskbar |
+| <img src="docs/images/theme-ClearList.png" alt="Clear List"><br>**Clear List**: light card with a green accent | <img src="docs/images/theme-LineMap.png" alt="Line Map"><br>**Line Map**: light card in transit-map colors |
+| <img src="docs/images/theme-EditorialIndex.png" alt="Editorial Index"><br>**Editorial Index**: cream paper with a serif font | <img src="docs/images/theme-CobaltWindow.png" alt="Cobalt Window"><br>**Cobalt Window**: pale blue card with a cobalt frame |
+| <img src="docs/images/theme-OliveLcd.png" alt="Olive LCD"><br>**Olive LCD**: olive pocket-calculator screen | <img src="docs/images/theme-Mono.png" alt="Mono"><br>**Mono**: black-and-white terminal |
+| <img src="docs/images/theme-Matrix.png" alt="Matrix"><br>**Matrix**: green LED terminal, TaskbarLed's first look | |
+
+On macOS the panel lists sessions and subagents in rows, so the same themes look different there: see the [macOS theme gallery](docs/MACOS-THEMES.md).
 
 ### Make your own theme
 
