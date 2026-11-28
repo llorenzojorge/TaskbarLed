@@ -83,7 +83,7 @@ These are the maintainer's decisions about what TaskbarLed is. A pull request th
 
 **Both platforms:**
 - Shared code (`Core`, `Sources.*`, the settings model, `src/TaskbarLed.App/Themes`) serves Windows and macOS. A Mac feature that needs a shared change keeps Windows' defaults identical, and the pull request says what Windows users see differently (ideally nothing) with `--render-demo` images.
-- A platform-only feature lives in that platform's app project. Do not reach into the other app's folder (no file links from `TaskbarLed.App` into `TaskbarLed.App.Avalonia` or back); put shared files in a shared project.
+- A platform-only feature lives in that platform's app project. Do not reach into the other app's folder (no file links from `TaskbarLed.App` into `TaskbarLed.App.Avalonia` or back); put files both apps use in the neutral `assets/` folder at the repository root and link them from each project.
 
 **Themes:**
 - One definition per theme for both platforms: values only, in the `Led.*` keys documented at the top of `Matrix.xaml` and one line in `ThemeCatalog`. Most themes change colors and typography, not the layout.
