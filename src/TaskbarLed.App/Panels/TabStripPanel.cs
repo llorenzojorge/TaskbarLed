@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using TaskbarLed.Core.Presentation;
@@ -14,11 +15,13 @@ public sealed class TabStripPanel : Panel
     /// <summary>Narrowest a tab gets: number, a letter or two and the status mark.</summary>
     public const double MinTabWidth = 44;
 
+    private readonly HashSet<INotifyPropertyChanged> _watched = [];
     private double[] _widths = [];
 
     protected override Size MeasureOverride(Size availableSize)
     {
         var children = InternalChildren.Cast<UIElement>().ToList();
+        WatchItems(children);
         foreach (var child in children)
         {
             child.Measure(new Size(double.PositiveInfinity, availableSize.Height));
@@ -49,4 +52,30 @@ public sealed class TabStripPanel : Panel
 
         return finalSize;
     }
+
+    // Tabs are updated in place. When a title changes (the folder name first, the chat title later), WPF
+    // re-measures that tab only, inside the slot it already had, so its desired width never grows and this
+    // panel is never asked again: the tab stayed as narrow as "1 TaskbarLed" with room to spare. Any change
+    // to a tab's item measures the whole row again.
+    private void WatchItems(List<UIElement> children)
+    {
+        var current = children
+            .OfType<FrameworkElement>()
+            .Select(c => c.DataContext)
+            .OfType<INotifyPropertyChanged>()
+            .ToHashSet();
+
+        foreach (var gone in _watched.Where(item => !current.Contains(item)).ToList())
+        {
+            gone.PropertyChanged -= OnItemChanged;
+            _watched.Remove(gone);
+        }
+
+        foreach (var item in current.Where(_watched.Add))
+        {
+            item.PropertyChanged += OnItemChanged;
+        }
+    }
+
+    private void OnItemChanged(object? sender, PropertyChangedEventArgs e) => InvalidateMeasure();
 }
