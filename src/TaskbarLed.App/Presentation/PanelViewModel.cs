@@ -32,12 +32,24 @@ public sealed partial class ChannelViewModel : ObservableObject
     };
 }
 
+public sealed record SessionListRow(string Label, string Status, bool IsChild, string Route, bool IsDone)
+{
+    public string RouteColor => RouteColors.For(Route);
+    public string RouteLabel => IsChild ? "●" : Route;
+}
+
 /// <summary>State bound by every panel window. Shared across monitors so they always agree.</summary>
 public sealed partial class PanelViewModel : ObservableObject
 {
     private readonly string _editHint;
     private readonly CultureInfo _culture;
     private PanelFrame? _frame;
+    private IReadOnlyList<Session> _sessions = [];
+    private DateTimeOffset _lastFrameAt;
+    private readonly Dictionary<string, int> _routes = new(StringComparer.Ordinal);
+
+    [ObservableProperty]
+    public partial bool IsLineMap { get; set; }
 
     public PanelViewModel(string editHint, CultureInfo culture)
     {
@@ -77,6 +89,7 @@ public sealed partial class PanelViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DisplayText))]
+    [NotifyPropertyChangedFor(nameof(ShowRows))]
     public partial bool IsEditing { get; set; }
 
     /// <summary>One-off tip shown in the feed (e.g. the first-run "right-click to edit"); null when none.</summary>
@@ -95,10 +108,31 @@ public sealed partial class PanelViewModel : ObservableObject
     /// <summary>Applies the theme's letter case to any text shown by the app (alerts, too).</summary>
     public string Cased(string text) => Uppercase ? text.ToUpper(_culture) : text;
 
-    public void Apply(PanelFrame frame)
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowRows))]
+    public partial bool ShowSessionList { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowRows))]
+    public partial IReadOnlyList<SessionListRow> Rows { get; set; } = [];
+
+    [ObservableProperty]
+    public partial int ActiveCount { get; set; }
+
+    public bool ShowRows => ShowSessionList && !IsEditing && Rows.Count > 0;
+
+    public void Apply(PanelFrame frame, IReadOnlyList<Session>? sessions = null, DateTimeOffset now = default)
     {
         ArgumentNullException.ThrowIfNull(frame);
         _frame = frame;
+        _sessions = sessions ?? [];
+        _lastFrameAt = now;
+        ActiveCount = _sessions.Count(session => session.Status is SessionStatus.Running or SessionStatus.AwaitingInput);
+        var rows = BuildRows(_sessions, now).ToArray();
+        if (!Rows.SequenceEqual(rows))
+        {
+            Rows = rows;
+        }
 
         Feed = frame.Feed;
         ElapsedText = frame.ElapsedText;
@@ -126,12 +160,93 @@ public sealed partial class PanelViewModel : ObservableObject
         }
     }
 
+    private IEnumerable<SessionListRow> BuildRows(IReadOnlyList<Session> sessions, DateTimeOffset now)
+    {
+        var known = sessions.ToDictionary(session => session.Id, StringComparer.Ordinal);
+        var portuguese = _culture.TwoLetterISOLanguageName == "pt";
+        var groups = sessions.Where(session => session.Status != SessionStatus.Idle
+            && (session.Status != SessionStatus.Completed || (now - session.LastUpdated).TotalSeconds < 10))
+            .GroupBy(session => session.ParentId ?? session.Id, StringComparer.Ordinal).ToArray();
+        var activeRoutes = groups.Select(group => group.Key).ToHashSet(StringComparer.Ordinal);
+        foreach (var expired in _routes.Keys.Where(id => !activeRoutes.Contains(id)).ToArray())
+        {
+            _routes.Remove(expired);
+        }
+
+        var used = _routes.Values.ToHashSet();
+        foreach (var group in groups)
+        {
+            if (!_routes.TryGetValue(group.Key, out var index))
+            {
+                index = 0;
+                while (!used.Add(index))
+                {
+                    index++;
+                }
+
+                _routes.Add(group.Key, index);
+            }
+            var route = RouteLabel(index);
+            if (known.TryGetValue(group.Key, out var parent))
+            {
+                yield return Row(parent, false, route);
+            }
+            else
+            {
+                var worker = group.First();
+                yield return new SessionListRow(Cased(worker.SourceId), string.Empty, false, route, false);
+            }
+
+            foreach (var worker in group.Where(session => session.ParentId is not null))
+            {
+                yield return Row(worker, true, route);
+            }
+        }
+
+        SessionListRow Row(Session session, bool child, string route)
+        {
+            var status = session.Status switch
+            {
+                SessionStatus.Running => portuguese ? "▸ Rodando" : "▸ Running",
+                SessionStatus.AwaitingInput => portuguese ? "! Aguardando" : "! Waiting",
+                SessionStatus.Completed => portuguese ? "✓ Concluído" : "✓ Done",
+                _ => portuguese ? "Ocioso" : "Idle",
+            };
+            var label = session.DisplayName;
+            if (session.Status != SessionStatus.Idle && session.Elapsed(now) is { } elapsed)
+            {
+                status += " · " + DurationFormat.Clock(elapsed);
+            }
+
+            var done = session.Status == SessionStatus.Completed;
+            if (done)
+            {
+                var remaining = Math.Clamp((int)Math.Ceiling(10 - (now - session.LastUpdated).TotalSeconds), 0, 10);
+                status += $" · {remaining}s";
+            }
+            return new SessionListRow(Cased(label), status, child, route, done);
+        }
+    }
+
+    private static string RouteLabel(int index)
+    {
+        var label = string.Empty;
+        do
+        {
+            label = (char)('A' + index % 26) + label;
+            index = index / 26 - 1;
+        }
+        while (index >= 0);
+
+        return label;
+    }
+
     // Re-case tab labels when the theme changes.
     partial void OnUppercaseChanged(bool value)
     {
         if (_frame is not null)
         {
-            Apply(_frame);
+            Apply(_frame, _sessions, _lastFrameAt);
         }
     }
 }

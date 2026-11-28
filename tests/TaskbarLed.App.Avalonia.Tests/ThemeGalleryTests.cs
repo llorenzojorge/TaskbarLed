@@ -79,4 +79,48 @@ public class ThemeGalleryTests
             window.Close();
         }
     }
+    [AvaloniaFact]
+    public void Every_theme_keeps_the_island_count_readable_with_one_brand_header()
+    {
+        var model = new PanelViewModel(CultureInfo.GetCultureInfo("pt-BR"))
+        {
+            IslandMode = true,
+            IslandHeaderHeight = 30,
+            IslandActivityCount = 12,
+        };
+        var view = new PanelView { DataContext = model, Classes = { "dynamic-island" } };
+        var window = new Window { Width = 320, Height = 34, Content = view };
+        window.Show();
+        try
+        {
+            foreach (var theme in PanelThemes.All)
+            {
+                var app = Application.Current!;
+                PanelThemes.Apply(app, model, theme.Id);
+                var background = Assert.IsAssignableFrom<ISolidColorBrush>(app.Resources["Led.IslandBadgeBackground"]);
+                var foreground = Assert.IsAssignableFrom<ISolidColorBrush>(app.Resources["Led.IslandBadgeForeground"]);
+                Assert.True(PanelThemes.Contrast(background.Color, foreground.Color) >= 4.5, theme.Id);
+
+                model.IslandExpanded = false;
+                window.Height = 34;
+                using var compact = window.CaptureRenderedFrame();
+                Assert.NotNull(compact);
+                var badge = view.FindControl<Border>("IslandActivityBadge")!;
+                Assert.True(badge.Bounds.Height > 0 && badge.Bounds.Height <= 30, theme.Id);
+                Assert.False(view.FindControl<Grid>("PanelContent")!.IsVisible);
+
+                model.IslandExpanded = true;
+                window.Height = 220;
+                using var expanded = window.CaptureRenderedFrame();
+                Assert.NotNull(expanded);
+                Assert.True(view.FindControl<Grid>("PanelContent")!.IsVisible);
+                Assert.False(view.FindControl<Grid>("PanelBrand")!.IsVisible);
+            }
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
 }

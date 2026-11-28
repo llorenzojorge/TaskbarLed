@@ -27,6 +27,15 @@ jobs:
       - name: Test
         run: dotnet test TaskbarLed.slnx -c Release --no-build --logger "trx;LogFileName=results.trx"
 
+      - name: Render Windows panel screenshots
+        run: dotnet run --project src/TaskbarLed.App -c Release --no-build -- --render-demo artifacts/windows-screenshots
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TaskbarLed-windows-screenshots
+          path: artifacts/windows-screenshots
+          if-no-files-found: error
+
       - name: Publish app
         run: dotnet publish src/TaskbarLed.App -c Release -o artifacts/TaskbarLed
 

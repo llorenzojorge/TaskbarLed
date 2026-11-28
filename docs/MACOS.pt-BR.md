@@ -25,9 +25,11 @@ O script cria um `.pkg` e um `.zip` em `artifacts/TaskbarLed-<rid>/`. Encerre a 
 
 ## Usar o painel
 
-O TaskbarLed flutua acima do Dock. O painel aparece quando há atividade. O ícone da barra de menus permite mantê-lo visível mesmo ocioso. Clique com o botão direito para abrir **Temas**, **Editar posição e tamanho** ou **Encerrar**. Escolha o tamanho automático ou arraste a borda direita, inferior ou o canto no modo manual. A opacidade ajusta o fundo do tema e mantém o texto legível. Sessões concluídas aparecem por dez segundos. No Mapa de Linhas, a letra da rota permanece enquanto a sessão estiver visível. Liquid Glass usa o material nativo no macOS 26. Versões anteriores usam um fundo translúcido.
+O TaskbarLed flutua acima do Dock. O painel aparece quando há atividade. O ícone da barra de menus permite mantê-lo visível mesmo ocioso. Clique com o botão direito para abrir **Temas**, **Editar posição e tamanho** ou **Encerrar**. Escolha o tamanho automático ou arraste a borda direita, inferior ou o canto no modo manual. A opacidade ajusta o fundo do tema e mantém o texto legível. Sessões concluídas aparecem por dez segundos. No Mapa de Linhas, a letra da rota permanece enquanto a sessão estiver visível. Liquid Glass usa material nativo fosco no macOS 26. Escolha **Crystal Liquid** para uma superfície mais transparente, com menos tonalização. Versões anteriores usam um fundo translúcido.
 
 Cada sessão e subagente mostra o tempo decorrido quando há uma hora de início conhecida. O til indica o tempo desde que o painel viu o agente do Antigravity pela primeira vez.
+
+Ative **Modo Dynamic Island** pelo menu do painel ou da barra de menus para encaixar o painel no topo do monitor principal, sobre o recorte da câmera quando houver. O modo abre como uma barra compacta com a marca e o número de atividades. Clique na barra para expandir ou recolher as sessões. O tema selecionado continua aplicado. Desative-o para voltar à posição salva.
 
 ## Conectar agentes
 

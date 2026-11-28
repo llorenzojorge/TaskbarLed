@@ -119,11 +119,39 @@ public sealed class PanelManager : IDisposable
 
             window.SetClickThrough(mini);
             window.Opacity = mini ? MiniOpacity : 1;
+            window.SetBackgroundOpacity(_settings.BackgroundOpacity);
+            var topBar = _settings.TopActivityBar && !mini && !_viewModel.IsEditing;
+            window.SetTopActivityBar(topBar);
+            window.ShowSessionRows = !mini && (topBar ? window.TopActivityExpanded : _viewModel.ShowRows);
             window.Place(mini
                 ? PanelLayout.MiniCorner(monitor.Bounds, monitor.Scale)
-                : PanelLayout.Compute(_settings, monitor.Bounds, monitor.Taskbar, monitor.Scale, monitor.TaskbarItems));
+                : topBar ? TopActivityBounds(monitor, window.TopActivityExpanded) : PanelBounds(monitor));
             window.KeepOnTop();
         }
+    }
+
+    private PixelRect TopActivityBounds(MonitorInfo monitor, bool expanded)
+    {
+        var width = Math.Min(monitor.Bounds.Width, (int)Math.Ceiling((expanded ? _settings.CurrentPosition.Width : 320) * monitor.Scale));
+        var height = Math.Min(monitor.Bounds.Height, (int)Math.Ceiling((expanded ? 32 + 23d * _viewModel.Rows.Count : 32) * monitor.Scale));
+        return PixelRect.FromSize(monitor.Bounds.Left + (monitor.Bounds.Width - width) / 2, monitor.Bounds.Top, width, height);
+    }
+
+    private PixelRect PanelBounds(MonitorInfo monitor)
+    {
+        if (!_viewModel.ShowRows)
+        {
+            return PanelLayout.Compute(_settings, monitor.Bounds, monitor.Taskbar, monitor.Scale, monitor.TaskbarItems);
+        }
+
+        var floating = _settings.Placement == PanelPlacement.Taskbar
+            ? _settings with { Placement = PanelPlacement.AboveTaskbar, AbovePosition = _settings.TaskbarPosition }
+            : _settings;
+        var bounds = PanelLayout.Compute(floating, monitor.Bounds, monitor.Taskbar, monitor.Scale);
+        var height = (int)Math.Ceiling((32 + 23d * _viewModel.Rows.Count) * monitor.Scale);
+        return floating.Placement == PanelPlacement.Free
+            ? bounds with { Bottom = Math.Min(monitor.Bounds.Bottom, bounds.Top + height) }
+            : bounds with { Top = Math.Max(monitor.Bounds.Top, bounds.Bottom - height) };
     }
 
     public void Dispose()

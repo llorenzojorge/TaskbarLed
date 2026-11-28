@@ -23,6 +23,9 @@ public sealed record TrayCommands(
     Action<PanelPlacement> SelectPlacement,
     Action<FullscreenBehavior> SelectFullscreen,
     Action<string> SelectTheme,
+    Action<double> SelectOpacity,
+    Action ToggleSessionList,
+    Action ToggleTopActivityBar,
     Action ToggleSoundOnDone,
     Action ToggleSoundOnAttention,
     Action<SoundStyle> SelectSoundStyle,
@@ -169,6 +172,18 @@ public sealed class TrayIcon : IDisposable
 
         KeepOpenOnPick(themeMenu);
         _menu.Items.Add(themeMenu);
+
+        var opacityMenu = new ToolStripMenuItem(_strings.BackgroundOpacity);
+        foreach (var opacity in new[] { 1.0, 0.85, 0.70, 0.55, 0.35 })
+        {
+            opacityMenu.DropDownItems.Add(Check(opacity.ToString("P0", CultureInfo.CurrentCulture),
+                state.Panel.BackgroundOpacity == opacity, () => _commands.SelectOpacity(opacity)));
+        }
+
+        KeepOpenOnPick(opacityMenu);
+        _menu.Items.Add(opacityMenu);
+        _menu.Items.Add(Check(_strings.SessionList, state.Panel.ShowSessionList, _commands.ToggleSessionList));
+        _menu.Items.Add(Check(_strings.TopActivityBar, state.Panel.TopActivityBar, _commands.ToggleTopActivityBar));
         _menu.Items.Add(SoundMenu(state.Panel));
 
         // Language names are written in their own language so anyone can find theirs.

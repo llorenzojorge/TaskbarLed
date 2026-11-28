@@ -149,7 +149,24 @@ public sealed partial class App : Application
         }
 
         AddAction(strings.EditPlacement, panel.BeginEdit);
-        AddAction(strings.ResetPlacement, panel.ResetPosition);
+        var islandLabel = pt ? "Modo Dynamic Island" : "Dynamic Island mode";
+        var nativeIsland = new NativeMenuItem(islandLabel) { ToggleType = MenuItemToggleType.CheckBox };
+        var contextIsland = new MenuItem { Header = islandLabel, ToggleType = MenuItemToggleType.CheckBox };
+        void SetIsland(bool enabled)
+        {
+            panel.SetDynamicIsland(enabled);
+            nativeIsland.IsChecked = contextIsland.IsChecked = enabled;
+        }
+        nativeIsland.IsChecked = contextIsland.IsChecked = panel.IsDynamicIsland;
+        nativeIsland.Click += (_, _) => SetIsland(!panel.IsDynamicIsland);
+        contextIsland.Click += (_, _) => SetIsland(!panel.IsDynamicIsland);
+        AddAction(strings.ResetPlacement, () =>
+        {
+            SetIsland(false);
+            panel.ResetPosition();
+        });
+        menu.Items.Add(nativeIsland);
+        panelMenu.Items.Add(contextIsland);
         AddAction(strings.EnableIntegration,
             () => ConfigureHooks(pt, install: true));
         AddAction(strings.DisableIntegration,

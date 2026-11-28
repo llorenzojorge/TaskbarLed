@@ -31,7 +31,7 @@
   <SolidColorBrush x:Key="Led.CompletionTint" Color="#58FFFFFF" />
   <SolidColorBrush x:Key="Led.BrandBackdropBrush" Color="#60000000" />
   <LinearGradientBrush x:Key="Led.PanelSurfaceBrush" StartPoint="0,0" EndPoint="1,1">
-    <GradientStop Color="#89000000" Offset="0" />
-    <GradientStop Color="#74000000" Offset="1" />
+    <GradientStop Color="#42000000" Offset="0" />
+    <GradientStop Color="#30000000" Offset="1" />
   </LinearGradientBrush>
 </ResourceDictionary>

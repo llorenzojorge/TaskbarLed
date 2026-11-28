@@ -22,6 +22,7 @@ internal static class PanelThemes
         new("Minimal", "Minimal"),
         new("Glass", "Glass"),
         new("LiquidGlass", "Liquid Glass"),
+        new("CrystalLiquid", "Crystal Liquid"),
         new("Paper", "Paper"),
         new("AmberTree", "Amber Tree"),
         new("CompactCharcoal", "Compact Charcoal"),
@@ -31,6 +32,7 @@ internal static class PanelThemes
         new("CobaltWindow", "Cobalt Window"),
         new("VioletPhosphor", "Violet Phosphor"),
         new("LineMap", "Line Map"),
+        new("Octo", "Octo"),
         new("OliveLcd", "Olive LCD", Uppercase: true),
     ];
 
@@ -165,6 +167,14 @@ internal static class PanelThemes
         Brush("MenuFlyoutItemBackgroundPressed", pressed);
         Brush("Led.MenuQuitBrush", highlight);
         Brush("Led.MenuAccentBrush", accent);
+
+        var badgeText = Read("ForegroundBrush");
+        if (Contrast(badgeText, background) < 4.5)
+        {
+            badgeText = Contrast(Colors.Black, background) > Contrast(Colors.White, background) ? Colors.Black : Colors.White;
+        }
+        Brush("Led.IslandBadgeBackground", background);
+        Brush("Led.IslandBadgeForeground", badgeText);
     }
 
     private static Color Blend(Color baseColor, Color over, double opacity) => Color.FromRgb(
@@ -172,7 +182,7 @@ internal static class PanelThemes
         (byte)Math.Round(baseColor.G + (over.G - baseColor.G) * opacity),
         (byte)Math.Round(baseColor.B + (over.B - baseColor.B) * opacity));
 
-    private static double Contrast(Color a, Color b)
+    internal static double Contrast(Color a, Color b)
     {
         static double Linear(byte channel)
         {

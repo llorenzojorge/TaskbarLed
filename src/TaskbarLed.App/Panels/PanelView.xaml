@@ -164,12 +164,99 @@
   </UserControl.Resources>
 
   <Grid x:Name="Root" Cursor="Hand">
-    <Border CornerRadius="4"
+    <Border x:Name="Surface" CornerRadius="4"
             Background="{DynamicResource Led.BackgroundBrush}"
             BorderBrush="{DynamicResource Led.BorderBrush}"
             BorderThickness="1" />
 
-    <Grid Margin="6,3,8,2">
+    <Grid Margin="12,0"
+          Visibility="{Binding ShowActivitySummary, RelativeSource={RelativeSource AncestorType=panels:PanelView}, Converter={StaticResource BoolToVisibility}}">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <Image Source="/Assets/TaskbarLedMark.png" Width="19" Height="19" VerticalAlignment="Center" HorizontalAlignment="Left" />
+      <Border Grid.Column="1" MinWidth="39" CornerRadius="8" Padding="5,2" VerticalAlignment="Center"
+              Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+              TextElement.Foreground="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+          <TextBlock Text="▸" FontSize="12" Margin="0,0,4,0" />
+          <TextBlock Text="{Binding ActiveCount}" FontSize="12" FontWeight="SemiBold"
+                     FontFamily="{DynamicResource Led.FontFamily}" />
+        </StackPanel>
+      </Border>
+    </Grid>
+    <ScrollViewer Margin="8,5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                  Visibility="{Binding ShowSessionRows, RelativeSource={RelativeSource AncestorType=panels:PanelView}, Converter={StaticResource BoolToVisibility}}">
+      <StackPanel>
+        <Border CornerRadius="3" Margin="0,0,0,4">
+          <Border.Style>
+            <Style TargetType="Border">
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding IsLineMap}" Value="True">
+                  <Setter Property="Background" Value="{DynamicResource Led.BrandHeaderBrush}" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </Border.Style>
+          <StackPanel Orientation="Horizontal" Margin="4,2">
+            <Image Source="/Assets/TaskbarLedMark.png" Width="17" Height="17" Margin="0,0,6,0" />
+            <TextBlock Text="TaskbarLed" FontWeight="SemiBold" VerticalAlignment="Center">
+              <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                  <Setter Property="Foreground" Value="{DynamicResource Led.ForegroundBrush}" />
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsLineMap}" Value="True">
+                      <Setter Property="Foreground" Value="White" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </TextBlock.Style>
+            </TextBlock>
+          </StackPanel>
+        </Border>
+        <ItemsControl ItemsSource="{Binding Rows}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="{x:Type vm:SessionListRow}">
+              <Grid Height="23">
+                <Grid.Style>
+                  <Style TargetType="Grid">
+                    <Setter Property="Background" Value="{DynamicResource Led.ChannelOffBrush}" />
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding IsChild}" Value="True">
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="Margin" Value="12,0,0,0" />
+                      </DataTrigger>
+                      <DataTrigger Binding="{Binding IsDone}" Value="True">
+                        <Setter Property="Background" Value="#55BFE6C8" />
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </Grid.Style>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <DockPanel>
+                  <Border DockPanel.Dock="Left" Width="22" Height="17" Margin="2,0,3,0" CornerRadius="3"
+                          Background="{Binding RouteColor}"
+                          Visibility="{Binding DataContext.IsLineMap, RelativeSource={RelativeSource AncestorType=panels:PanelView}, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="{Binding RouteLabel}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                               FontWeight="Bold" Foreground="White" />
+                  </Border>
+                  <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis" Margin="5,0"
+                             VerticalAlignment="Center" Foreground="{DynamicResource Led.ForegroundBrush}" />
+                </DockPanel>
+                <TextBlock Grid.Column="1" Text="{Binding Status}" Margin="5,0"
+                           VerticalAlignment="Center" Foreground="{DynamicResource Led.ForegroundBrush}" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </ScrollViewer>
+
+    <Grid Margin="6,3,8,2" Visibility="{Binding ShowCompactTicker, RelativeSource={RelativeSource AncestorType=panels:PanelView}, Converter={StaticResource BoolToVisibility}}">
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
         <RowDefinition Height="*" />

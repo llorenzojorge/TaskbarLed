@@ -42,7 +42,7 @@ Também dá pra trocar para um mini painel no canto (os cliques passam para o v�
 - **Detalhes ao vivo.** Ação atual (editando arquivo, rodando comando, buscando), última resposta e cronômetro do prompt.
 - **Do seu jeito.** Na barra de tarefas, flutuando logo acima dela, ou livre em qualquer lugar da tela, com ímã nas bordas. Cada modo lembra a própria posição.
 - **Um som curto quando importa.** Duas notas subindo quando uma sessão termina, a mesma nota duas vezes quando uma precisa de você, mesmo por cima de um vídeo em tela cheia. Só enquanto o app daquela sessão está fora de vista. Três timbres (suave, retrô, sino) que acompanham o tema, ou escolha um; cada som pode ser desligado.
-- **Dezessete temas, troca na hora.** Claude Code por padrão, além de terminais, LCDs retrô, cartões claros e escuros, ou [o seu próprio](#crie-o-seu-próprio-tema) num pequeno arquivo JSON.
+- **Dezenove temas, troca na hora.** Claude Code por padrão, além de terminais, LCDs retrô, cartões claros e escuros, ou [o seu próprio](#crie-o-seu-próprio-tema) num pequeno arquivo JSON.
 - **Português e inglês.** Segue o idioma do Windows, ou você escolhe no menu.
 - **Funciona onde o Claude Code roda.** App desktop, CLI e extensões de IDE (VS Code, JetBrains) usam os mesmos hooks.
 - **Leve e privado.** Movido a eventos, cerca de 60 MB de RAM, e nada sai do seu computador.
@@ -61,9 +61,13 @@ Botão direito no painel → **Tema**. O painel fica na tela enquanto o menu est
 | <img src="docs/images/theme-ClearList.png" alt="Clear List"><br>**Clear List**: cartão claro com detalhe verde | <img src="docs/images/theme-LineMap.png" alt="Line Map"><br>**Line Map**: cartão claro nas cores de um mapa de metrô |
 | <img src="docs/images/theme-EditorialIndex.png" alt="Editorial Index"><br>**Editorial Index**: papel creme com fonte serifada | <img src="docs/images/theme-CobaltWindow.png" alt="Cobalt Window"><br>**Cobalt Window**: cartão azul-claro com moldura cobalto |
 | <img src="docs/images/theme-OliveLcd.png" alt="Olive LCD"><br>**Olive LCD**: visor oliva de calculadora | <img src="docs/images/theme-Mono.png" alt="Mono"><br>**Mono**: terminal preto e branco |
-| <img src="docs/images/theme-Matrix.png" alt="Matrix"><br>**Matrix**: terminal LED verde, o primeiro visual do TaskbarLed | |
+| <img src="docs/images/theme-Matrix.png" alt="Matrix"><br>**Matrix**: terminal LED verde, o primeiro visual do TaskbarLed |  <img src="docs/images/theme-Octo.png" alt="Octo"><br>**Octo**: painel escuro com destaques em rosa |
 
-No macOS o painel lista sessões e subagentes em linhas, então os mesmos temas ficam diferentes lá: veja a [galeria de temas do macOS](docs/MACOS-THEMES.pt-BR.md).
+Os 19 temas vêm tanto no Windows quanto no macOS, incluindo Octo, Line Map e Crystal Liquid. Os dois painéis podem mostrar sessões e subagentes em linhas, com o tempo de execução. No Windows, use **Lista de sessões** para alternar entre a lista flutuante e as abas compactas na barra de tarefas. **Opacidade do fundo** ajusta a superfície do painel. **Barra de atividade no topo** mostra uma versão compacta e centralizada. Clique para expandir ou recolher as sessões. O hook do Windows recebe eventos do Claude Code e de integrações genéricas. Veja mais capturas na [galeria de temas](docs/MACOS-THEMES.pt-BR.md).
+
+| Windows (WPF) | macOS |
+| --- | --- |
+| ![Painel Windows renderizado pelo TaskbarLed no Windows](docs/images/windows-sessions-LineMap-pt.png) | ![Painel Mac capturado no Apple Silicon](docs/images/macos-sessions-live.png) |
 
 ### Crie o seu próprio tema
 

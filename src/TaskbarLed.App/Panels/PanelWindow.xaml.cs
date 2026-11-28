@@ -36,6 +36,24 @@ public sealed class EditDragEventArgs(EditKind kind, int deltaX, int deltaY, boo
 /// </summary>
 public partial class PanelWindow : Window
 {
+    internal bool TopActivityBar { get; private set; }
+    internal bool TopActivityExpanded { get; private set; }
+
+    internal void SetTopActivityBar(bool enabled)
+    {
+        TopActivityBar = enabled;
+        if (!enabled)
+        {
+            TopActivityExpanded = false;
+        }
+
+        View.ShowActivitySummary = enabled && !TopActivityExpanded;
+    }
+
+    internal bool ShowSessionRows { set => View.ShowSessionRows = value; }
+
+    internal void SetBackgroundOpacity(double opacity) => View.Surface.Opacity = opacity;
+
     private readonly PanelViewModel _viewModel;
     private nint _handle;
     private EditKind? _dragKind;
@@ -155,7 +173,12 @@ public partial class PanelWindow : Window
         }
         else if (!_viewModel.IsEditing)
         {
-            if (TabUnder(e.OriginalSource) is { SessionId.Length: > 0 } tab)
+            if (TopActivityBar)
+            {
+                TopActivityExpanded = !TopActivityExpanded;
+                SetTopActivityBar(true);
+            }
+            else if (TabUnder(e.OriginalSource) is { SessionId.Length: > 0 } tab)
             {
                 TabOpenRequested?.Invoke(this, tab.SessionId);
             }

@@ -1,0 +1,37 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+  <SolidColorBrush x:Key="Led.BackgroundBrush" Color="#2E28323E" />
+  <SolidColorBrush x:Key="Led.BorderBrush" Color="#80E5EDFF" />
+  <SolidColorBrush x:Key="Led.ForegroundBrush" Color="#F7FAFF" />
+  <SolidColorBrush x:Key="Led.DimBrush" Color="#DAE0EC" />
+  <SolidColorBrush x:Key="Led.AttentionBrush" Color="#FFF2C6" />
+  <SolidColorBrush x:Key="Led.DoneBrush" Color="#FFFFFF" />
+  <SolidColorBrush x:Key="Led.ChannelOffBrush" Color="#24000000" />
+  <SolidColorBrush x:Key="Led.EditBrush" Color="#F5FBFF" />
+  <SolidColorBrush x:Key="Led.AccentBrush" Color="#F5FBFF" />
+  <SolidColorBrush x:Key="Led.DotGridBrush" Color="Transparent" />
+  <SolidColorBrush x:Key="Led.SessionTitleBrush" Color="#FFFFFF" />
+  <SolidColorBrush x:Key="Led.SessionRunningBrush" Color="#F5FBFF" />
+  <SolidColorBrush x:Key="Led.SessionHeaderStatusBrush" Color="#F5FBFF" />
+  <SolidColorBrush x:Key="Led.SessionNodeBrush" Color="Transparent" />
+  <SolidColorBrush x:Key="Led.SessionHeaderBrush" Color="#24000000" />
+  <SolidColorBrush x:Key="Led.SessionRailBrush" Color="Transparent" />
+  <SolidColorBrush x:Key="Led.SessionTreeBrush" Color="#70DEE8F8" />
+  <SolidColorBrush x:Key="Led.SessionChildBrush" Color="#1C000000" />
+  <SolidColorBrush x:Key="Led.SessionStatusBrush" Color="Transparent" />
+  <SolidColorBrush x:Key="Led.SessionDividerBrush" Color="#25E5EDFF" />
+  <Color x:Key="Led.GlowColor">Transparent</Color>
+  <sys:Double x:Key="Led.GlowOpacity">0</sys:Double>
+  <x:Static x:Key="Led.FeedPrefix" Member="sys:String.Empty" />
+  <FontFamily x:Key="Led.FontFamily">Helvetica Neue, Consolas, Courier New</FontFamily>
+  <sys:Double x:Key="Led.PanelRadius">16</sys:Double>
+  <Thickness x:Key="Led.PanelPadding">8,3</Thickness>
+  <SolidColorBrush x:Key="Led.CompletionBrush" Color="#A8FFFFFF" />
+  <SolidColorBrush x:Key="Led.CompletionTint" Color="#58FFFFFF" />
+  <SolidColorBrush x:Key="Led.BrandBackdropBrush" Color="#30000000" />
+  <LinearGradientBrush x:Key="Led.PanelSurfaceBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#20000000" Offset="0" />
+    <GradientStop Color="#0F000000" Offset="1" />
+  </LinearGradientBrush>
+</ResourceDictionary>

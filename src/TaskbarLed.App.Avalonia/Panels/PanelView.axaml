@@ -148,17 +148,24 @@
     <Style Selector="Border.halo.attention">
       <Setter Property="BorderBrush" Value="{DynamicResource Led.AttentionBrush}" />
     </Style>
+    <Style Selector="Border.island-surface">
+      <Setter Property="CornerRadius" Value="{DynamicResource Led.PanelRadius}" />
+      <Setter Property="BorderThickness" Value="{DynamicResource Led.FrameThickness}" />
+    </Style>
+    <Style Selector="UserControl.dynamic-island Border.island-surface">
+      <Setter Property="CornerRadius" Value="0,0,20,20" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
   </UserControl.Styles>
 
   <Panel>
-    <Border Opacity="{Binding PanelOpacity}" IsHitTestVisible="False"
-            CornerRadius="{DynamicResource Led.PanelRadius}" BorderThickness="{DynamicResource Led.FrameThickness}"
+    <Border Classes="island-surface" Opacity="{Binding PanelOpacity}" IsHitTestVisible="False"
             Background="{DynamicResource Led.PanelSurfaceBrush}" BorderBrush="{DynamicResource Led.BorderBrush}" />
-    <Border Name="PanelFrame" CornerRadius="{DynamicResource Led.PanelRadius}" BorderThickness="{DynamicResource Led.FrameThickness}"
+    <Border Name="PanelFrame" Classes="island-surface"
             Padding="{DynamicResource Led.PanelPadding}">
 
-      <Grid Name="PanelContent" RowDefinitions="Auto,Auto,Auto,*" ColumnDefinitions="*,Auto">
-        <Grid Grid.ColumnSpan="2" Height="26" Margin="0,0,0,3">
+      <Grid Name="PanelContent" Margin="{Binding IslandContentMargin}" IsVisible="{Binding ShowPanelContent}" RowDefinitions="Auto,Auto,Auto,*" ColumnDefinitions="*,Auto">
+        <Grid Name="PanelBrand" Grid.ColumnSpan="2" Height="26" Margin="0,0,0,3" IsVisible="{Binding !IslandMode}">
           <Border IsVisible="{Binding ShowLineMap}" Background="{DynamicResource Led.BrandHeaderBrush}" CornerRadius="4,4,0,0" />
           <Border HorizontalAlignment="Left" VerticalAlignment="Center" Padding="7,2"
                   CornerRadius="8" Background="{DynamicResource Led.BrandBackdropBrush}">
@@ -336,6 +343,30 @@
         </ScrollViewer>
       </Grid>
     </Border>
+    <Button Name="IslandToggle" IsVisible="{Binding IslandMode}" Height="{Binding IslandHeaderHeight}"
+            Margin="3,2,3,0" Padding="10,0" VerticalAlignment="Top" HorizontalAlignment="Stretch"
+            HorizontalContentAlignment="Stretch" Background="Transparent" BorderThickness="0"
+            Focusable="False" AutomationProperties.Name="Dynamic Island">
+      <Button.Template>
+        <ControlTemplate>
+          <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+            <ContentPresenter Content="{TemplateBinding Content}" VerticalAlignment="Center" />
+          </Border>
+        </ControlTemplate>
+      </Button.Template>
+      <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+        <Image Source="/Assets/TaskbarLedMark.png" Width="19" Height="19" />
+        <Border Name="IslandActivityBadge" Grid.Column="2" MinWidth="39" CornerRadius="8" Padding="5,2"
+                VerticalAlignment="Center" Background="{DynamicResource Led.IslandBadgeBackground}">
+          <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+            <TextBlock Text="▸" FontSize="12" Foreground="{DynamicResource Led.IslandBadgeForeground}" />
+            <TextBlock Text="{Binding IslandActivityCount}" FontSize="12" FontWeight="SemiBold"
+                       Foreground="{DynamicResource Led.IslandBadgeForeground}"
+                       FontFamily="{DynamicResource Led.FontFamily}" />
+          </StackPanel>
+        </Border>
+      </Grid>
+    </Button>
 
     <Border Background="{DynamicResource Led.DotGridBrush}" CornerRadius="4" IsHitTestVisible="False" />
 

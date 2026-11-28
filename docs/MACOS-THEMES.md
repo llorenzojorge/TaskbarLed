@@ -1,10 +1,14 @@
 # TaskbarLed themes on macOS
 
-Screenshots of the panel's 17 themes, rendered by TaskbarLed with two sessions and four subagents. Pick a theme from the **Themes** menu in the menu bar.
+Screenshots of the panel's 19 themes, rendered by TaskbarLed with two sessions and four subagents. Pick a theme from the **Themes** menu in the menu bar.
 
 [Português do Brasil](MACOS-THEMES.pt-BR.md) · [Install on Mac](MACOS.md) · [Back to the README](../README.md)
 
 ## Shared themes
+
+| Crystal Liquid |
+| --- |
+| [![Crystal Liquid](images/macos-themes/CrystalLiquid.png)](images/macos-themes/CrystalLiquid.png) |
 
 | Line Map | Liquid Glass |
 | --- | --- |
@@ -48,9 +52,9 @@ Screenshot of the packaged app on macOS 26.5.2. The finished row uses test data.
 | --- | --- |
 | [![Minimal](images/macos-themes/Minimal.png)](images/macos-themes/Minimal.png) | [![Glass](images/macos-themes/Glass.png)](images/macos-themes/Glass.png) |
 
-| Paper |
-| --- |
-| [![Paper](images/macos-themes/Paper.png)](images/macos-themes/Paper.png) |
+| Paper | Octo |
+| --- | --- |
+| [![Paper](images/macos-themes/Paper.png)](images/macos-themes/Paper.png) | [![Octo](images/macos-themes/Octo.png)](images/macos-themes/Octo.png) |
 
 ## Update the screenshots
 

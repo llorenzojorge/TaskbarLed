@@ -43,6 +43,7 @@ internal sealed class FloatingPanelWindow : Window
     private bool _automaticEdit;
     private nint _nativeGlass;
     private double _glassOpacity;
+    private bool _crystalGlass;
     private readonly PanelView _panel;
     private readonly MacUiStrings _strings;
     private PixelPoint? _beforeEdit;
@@ -77,6 +78,11 @@ internal sealed class FloatingPanelWindow : Window
         Height = PanelHeight;
         _panel = new PanelView { DataContext = viewModel };
         Content = _panel;
+        _panel.FindControl<Button>("IslandToggle")!.Click += (_, _) =>
+        {
+            _viewModel.IslandExpanded = !_viewModel.IslandExpanded;
+            RestorePlacement();
+        };
 
         _frameTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(250), DispatcherPriority.Background, (_, _) => Render());
         ApplyFrame();
@@ -162,6 +168,22 @@ internal sealed class FloatingPanelWindow : Window
     }
 
     public void SetTheme(string id) => Persist(_preferences with { Theme = id });
+
+    private nint? _previousWindowLevel;
+
+    public bool IsDynamicIsland => _preferences.DynamicIsland;
+
+    public void SetDynamicIsland(bool enabled)
+    {
+        if (_beforeEdit.HasValue)
+        {
+            EndEdit(save: false);
+        }
+
+        Persist(_preferences with { DynamicIsland = enabled });
+        _viewModel.IslandExpanded = false;
+        RestorePlacement();
+    }
 
     public void ResetPosition()
     {
@@ -430,14 +452,27 @@ internal sealed class FloatingPanelWindow : Window
             return;
         }
 
+        var island = _preferences.DynamicIsland && !_beforeEdit.HasValue;
         var saved = _beforeEdit.HasValue ? Position
             : _preferences is { X: int x, Y: int y } ? new PixelPoint(x, y) : (PixelPoint?)null;
-        var screen = saved is { } point ? Screens.ScreenFromPoint(point) ?? primary : primary;
+        var screen = !island && saved is { } point ? Screens.ScreenFromPoint(point) ?? primary : primary;
         var area = screen.WorkingArea;
         var scale = screen.Scaling;
+        var headerHeight = island ? Math.Max(28, (area.Y - screen.Bounds.Y) / scale - 4) : 0;
+        _panel.Classes.Set("dynamic-island", island);
+        _viewModel.IslandMode = island;
+        _viewModel.IslandHeaderHeight = headerHeight;
+        UpdateIslandWindowLevel(island);
         var editorExtra = _beforeEdit.HasValue ? EditorHeight + 2 : 0;
-        Width = Math.Min(_panelWidth, area.Width / scale);
-        Height = Math.Min(_panelHeight + editorExtra, area.Height / scale);
+        var compact = island && !_viewModel.IslandExpanded;
+        Width = Math.Min(compact ? 320 : _panelWidth, area.Width / scale);
+        Height = compact ? headerHeight + 4 : Math.Min(_panelHeight + editorExtra, area.Height / scale) + headerHeight;
+
+        if (island)
+        {
+            Position = IslandPosition(screen.Bounds, (int)Math.Ceiling(Width * scale));
+            return;
+        }
 
         if (saved is { } position)
         {
@@ -450,6 +485,30 @@ internal sealed class FloatingPanelWindow : Window
         var rect = DockLayout(area, scale, Height, Width);
         Position = new PixelPoint(rect.Left, rect.Top);
     }
+
+    private void UpdateIslandWindowLevel(bool island)
+    {
+        if (!OperatingSystem.IsMacOS()
+            || TryGetPlatformHandle() is not IMacOSTopLevelPlatformHandle { NSWindow: var window }
+            || window == 0)
+        {
+            return;
+        }
+
+        if (island)
+        {
+            _previousWindowLevel ??= MacFloatingWindow.GetLevel(window);
+            MacFloatingWindow.SetLevel(window, MacFloatingWindow.StatusWindowLevel);
+        }
+        else if (_previousWindowLevel is { } level)
+        {
+            MacFloatingWindow.SetLevel(window, level);
+            _previousWindowLevel = null;
+        }
+    }
+
+    internal static PixelPoint IslandPosition(global::Avalonia.PixelRect area, int width) =>
+        new(area.X + Math.Max(0, (area.Width - width) / 2), area.Y);
 
     internal static int Constrain(int value, int min, int max, bool snap)
     {
@@ -537,21 +596,25 @@ internal sealed class FloatingPanelWindow : Window
             return;
         }
 
-        if (_viewModel.ThemeId != "LiquidGlass")
+        var crystal = _viewModel.ThemeId == "CrystalLiquid";
+        var glassTheme = crystal || _viewModel.ThemeId == "LiquidGlass";
+        if (_nativeGlass != 0 && (!glassTheme || _crystalGlass != crystal))
         {
-            if (_nativeGlass != 0)
-            {
-                MacFloatingWindow.RemoveLiquidGlass(_nativeGlass);
-                _nativeGlass = 0;
-            }
+            MacFloatingWindow.RemoveLiquidGlass(_nativeGlass);
+            _nativeGlass = 0;
+        }
 
+        if (!glassTheme)
+        {
             return;
         }
 
-        var opacity = _viewModel.PanelOpacity;
+        // Keep even the brightest parts of the clear AppKit surface translucent.
+        var opacity = _viewModel.PanelOpacity * (crystal ? 0.28 : 1);
         if (_nativeGlass == 0 && TryGetPlatformHandle() is IMacOSTopLevelPlatformHandle mac)
         {
-            _nativeGlass = MacFloatingWindow.AddLiquidGlass(mac.NSWindow, ClientSize.Width, ClientSize.Height, opacity);
+            _nativeGlass = MacFloatingWindow.AddLiquidGlass(mac.NSWindow, ClientSize.Width, ClientSize.Height, opacity, crystal);
+            _crystalGlass = crystal;
         }
         else if (_nativeGlass != 0 && opacity != _glassOpacity)
         {
@@ -570,7 +633,7 @@ internal sealed class FloatingPanelWindow : Window
     private void Render()
     {
         ApplyFrame();
-        var show = _beforeEdit.HasValue || KeepVisible || _viewModel.HasActivity || ContextMenu?.IsOpen == true;
+        var show = _beforeEdit.HasValue || _preferences.DynamicIsland || KeepVisible || _viewModel.HasActivity || ContextMenu?.IsOpen == true;
         if (show && !IsVisible)
         {
             Show();

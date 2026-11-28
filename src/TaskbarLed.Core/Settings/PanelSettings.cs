@@ -114,6 +114,12 @@ public sealed record PanelSettings
     /// <summary>Theme resource name (see Themes folder in the app).</summary>
     public string Theme { get; init; } = DefaultTheme;
 
+    public bool ShowSessionList { get; init; } = true;
+
+    public bool TopActivityBar { get; init; }
+
+    public double BackgroundOpacity { get; init; } = 1;
+
     /// <summary>Position for the current <see cref="Placement"/>.</summary>
     public PanelPosition CurrentPosition => Placement switch
     {
@@ -140,6 +146,7 @@ public sealed record PanelSettings
         VisibleThreshold = Math.Clamp(VisibleThreshold, 0.05, 0.95),
         RotationSeconds = Math.Clamp(RotationSeconds, 2, 120),
         StaleSessionHours = Math.Clamp(StaleSessionHours, 0.5, 168),
+        BackgroundOpacity = double.IsFinite(BackgroundOpacity) ? Math.Clamp(BackgroundOpacity, 0.35, 1) : 1,
         Theme = string.IsNullOrWhiteSpace(Theme) ? DefaultTheme : Theme,
         SoundStyle = Enum.IsDefined(SoundStyle) ? SoundStyle : SoundStyle.Auto,
     };

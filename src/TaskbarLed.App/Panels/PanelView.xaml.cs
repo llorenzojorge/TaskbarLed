@@ -14,6 +14,33 @@ namespace TaskbarLed.App.Panels;
 /// </summary>
 public partial class PanelView : UserControl
 {
+    public static readonly DependencyProperty ShowSessionRowsProperty = DependencyProperty.Register(
+        nameof(ShowSessionRows), typeof(bool), typeof(PanelView),
+        new PropertyMetadata(false, (sender, _) => ((PanelView)sender).UpdateTickerVisibility()));
+
+    public static readonly DependencyProperty ShowCompactTickerProperty = DependencyProperty.Register(
+        nameof(ShowCompactTicker), typeof(bool), typeof(PanelView), new PropertyMetadata(true));
+
+    public bool ShowSessionRows
+    {
+        get => (bool)GetValue(ShowSessionRowsProperty);
+        set => SetValue(ShowSessionRowsProperty, value);
+    }
+
+    public static readonly DependencyProperty ShowActivitySummaryProperty = DependencyProperty.Register(
+        nameof(ShowActivitySummary), typeof(bool), typeof(PanelView),
+        new PropertyMetadata(false, (sender, _) => ((PanelView)sender).UpdateTickerVisibility()));
+
+    public bool ShowActivitySummary
+    {
+        get => (bool)GetValue(ShowActivitySummaryProperty);
+        set => SetValue(ShowActivitySummaryProperty, value);
+    }
+
+    public bool ShowCompactTicker => (bool)GetValue(ShowCompactTickerProperty);
+
+    private void UpdateTickerVisibility() => SetValue(ShowCompactTickerProperty, !ShowSessionRows && !ShowActivitySummary);
+
     private static readonly Duration SlideDuration = new(TimeSpan.FromMilliseconds(260));
     private static readonly TimeSpan TypingBudget = TimeSpan.FromMilliseconds(650);
 

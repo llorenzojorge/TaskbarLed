@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Media;
 using System.Collections.ObjectModel;
 using System.Globalization;
@@ -44,7 +45,7 @@ public sealed partial class SessionDisplayRowViewModel(SessionDisplayRow row, bo
     public string Label => uppercase ? Row.Label.ToUpperInvariant() : Row.Label;
 
     public bool IsLineMap => themeId == "LineMap";
-    public bool IsLiquidGlass => themeId == "LiquidGlass";
+    public bool IsLiquidGlass => themeId is "LiquidGlass" or "CrystalLiquid";
     public bool IsEditorial => themeId == "EditorialIndex";
     public bool IsViolet => themeId == "VioletPhosphor";
     public bool IsCobalt => themeId == "CobaltWindow";
@@ -65,20 +66,13 @@ public sealed partial class SessionDisplayRowViewModel(SessionDisplayRow row, bo
     public bool ConnectToNext => !Row.LastStation;
     public string StationLabel => Row.StationName ?? Row.Label;
     public string LineLetter => Row.RouteLetter ?? "?";
-    public IBrush LineBrush => TransitColors.TryGetValue(LineLetter, out var brush) ? brush : TransitFallback;
+    public IBrush LineBrush => TransitColors.GetValueOrDefault(LineLetter, TransitFallback);
 
-    private static readonly Dictionary<string, IBrush> TransitColors = new(StringComparer.Ordinal)
-    {
-        ["A"] = new SolidColorBrush(Color.Parse("#A63831")),
-        ["B"] = new SolidColorBrush(Color.Parse("#23558B")),
-        ["C"] = new SolidColorBrush(Color.Parse("#146B74")),
-        ["D"] = new SolidColorBrush(Color.Parse("#326343")),
-        ["E"] = new SolidColorBrush(Color.Parse("#835789")),
-        ["F"] = new SolidColorBrush(Color.Parse("#935013")),
-        ["G"] = new SolidColorBrush(Color.Parse("#534372")),
-    };
+    private static readonly Dictionary<string, IBrush> TransitColors = "ABCDEFG"
+        .Select(letter => letter.ToString())
+        .ToDictionary(letter => letter, letter => (IBrush)new SolidColorBrush(Color.Parse(RouteColors.For(letter))), StringComparer.Ordinal);
 
-    private static readonly IBrush TransitFallback = new SolidColorBrush(Color.Parse("#465D6B"));
+    private static readonly IBrush TransitFallback = new SolidColorBrush(Color.Parse(RouteColors.For(string.Empty)));
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Status))]
@@ -139,6 +133,25 @@ public sealed partial class PanelViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasSubagents), nameof(ShowSessionList), nameof(ShowClearList), nameof(ShowLineMap))]
     public partial IReadOnlyList<SessionDisplayRowViewModel> SessionRows { get; set; } = [];
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowPanelContent))]
+    public partial bool IslandMode { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowPanelContent))]
+    public partial bool IslandExpanded { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IslandContentMargin))]
+    public partial double IslandHeaderHeight { get; set; }
+
+    public Thickness IslandContentMargin => new(0, IslandHeaderHeight, 0, 0);
+
+    [ObservableProperty]
+    public partial int IslandActivityCount { get; set; }
+
+    public bool ShowPanelContent => !IslandMode || IslandExpanded;
+
     public bool HasSubagents => SessionRows.Count != 0;
 
     [ObservableProperty]
@@ -193,6 +206,9 @@ public sealed partial class PanelViewModel : ObservableObject
     {
         ArgumentNullException.ThrowIfNull(frame);
         _frame = frame;
+        IslandActivityCount = frame.SessionRows.Count == 0
+            ? frame.Channels.Count(channel => channel.Status is SessionStatus.Running or SessionStatus.AwaitingInput)
+            : frame.SessionRows.Count(row => row.HasStatus && row.Status is SessionStatus.Running or SessionStatus.AwaitingInput);
 
         if (!SessionRows.Select(row => row.Row).SequenceEqual(frame.SessionRows.Select(SessionDisplayRowViewModel.WithoutTelemetry)))
         {

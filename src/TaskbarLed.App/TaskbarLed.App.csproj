@@ -25,12 +25,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="..\TaskbarLed.App.Avalonia\Assets\TaskbarLedMark.png" Link="Assets\TaskbarLedMark.png" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\TaskbarLed.Core\TaskbarLed.Core.csproj" />
     <ProjectReference Include="..\TaskbarLed.Sources.ClaudeCode\TaskbarLed.Sources.ClaudeCode.csproj" />
+    <ProjectReference Include="..\TaskbarLed.Sources.Generic\TaskbarLed.Sources.Generic.csproj" />
     <ProjectReference Include="..\TaskbarLed.Platform.Windows\TaskbarLed.Platform.Windows.csproj" />
     <!-- Ships TaskbarLed.Hook.exe next to the app; hooks point at it. -->
     <ProjectReference Include="..\TaskbarLed.Hook\TaskbarLed.Hook.csproj" />

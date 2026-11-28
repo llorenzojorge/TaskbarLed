@@ -3,7 +3,7 @@ using TaskbarLed.Core.Ipc;
 
 namespace TaskbarLed.App.Avalonia;
 
-internal sealed record PanelPreferences(string Theme = "ClaudeCode", int? X = null, int? Y = null, double Width = 420, bool? AutomaticSize = null, double? Height = null, double PanelOpacity = 1)
+internal sealed record PanelPreferences(string Theme = "ClaudeCode", int? X = null, int? Y = null, double Width = 420, bool? AutomaticSize = null, double? Height = null, double PanelOpacity = 1, bool DynamicIsland = false)
 {
     public bool UsesAutomaticSize() => AutomaticSize ?? Width == 420;
 

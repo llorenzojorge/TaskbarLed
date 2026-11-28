@@ -29,7 +29,7 @@ public class PanelCustomizationTests
             Assert.IsAssignableFrom<IBrush>(app.Resources["Led.DotGridBrush"]);
         }
 
-        Assert.Equal(17, backgrounds.Count);
+        Assert.Equal(19, backgrounds.Count);
         Assert.All(PanelThemes.All, theme =>
         {
             var option = App.CreateThemeMenuItem(theme);

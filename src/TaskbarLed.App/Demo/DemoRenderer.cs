@@ -46,6 +46,23 @@ internal static class DemoRenderer
         {
             ThemeCatalog.Apply(app.Resources, theme.Id);
             Save(Taskbar(Frame(Scenario.Mixed, english), width: 560, uppercase: theme.Uppercase, light: theme.Id == "Paper"), folder, $"theme-{theme.Id}.png");
+            if (theme.Id is "Octo" or "OliveLcd" or "Matrix")
+            {
+                var model = new PanelViewModel(string.Empty, english) { ActiveCount = 12 };
+                var top = new PanelView { DataContext = model, Width = 320, Height = 32, ShowActivitySummary = true };
+                Layout(top);
+                Save(top, folder, $"windows-top-{theme.Id}.png");
+            }
+        }
+
+        foreach (var (suffix, culture) in new[] { ("en", "en-US"), ("pt", "pt-BR") })
+        {
+            var lang = CultureInfo.GetCultureInfo(culture);
+            foreach (var id in new[] { "Octo", "LineMap" })
+            {
+                ThemeCatalog.Apply(app.Resources, id);
+                Save(SessionList(lang, id == "LineMap"), folder, $"windows-sessions-{id}-{suffix}.png");
+            }
         }
 
         // The example user theme, drawn through the same JSON path the app uses for files in the themes folder.
@@ -60,6 +77,24 @@ internal static class DemoRenderer
         }
 
         ThemeCatalog.Apply(app.Resources, ThemeCatalog.DefaultId);
+    }
+
+    private static PanelView SessionList(CultureInfo culture, bool lineMap)
+    {
+        var pt = culture.TwoLetterISOLanguageName == "pt";
+        var store = new SessionStore();
+        store.Apply(new PromptSubmitted("main", "demo", Now.AddMinutes(-2), pt ? "Testes da API" : "API tests", null));
+        store.Apply(new PromptSubmitted("worker", "demo", Now.AddSeconds(-47), pt ? "Revisor" : "Reviewer", null));
+        store.Apply(new ParentIdentified("worker", "demo", Now.AddSeconds(-47), "main"));
+        store.Apply(new PromptSubmitted("site", "demo", Now.AddMinutes(-1), "Landing page", null));
+
+        var sessions = store.Snapshot();
+        var composer = new PanelComposer(new SessionRotation(TimeSpan.FromSeconds(8)), TickerStrings.For(culture), culture);
+        var model = new PanelViewModel(string.Empty, culture) { ShowSessionList = true, IsLineMap = lineMap };
+        model.Apply(composer.Compose(sessions, Now), sessions, Now);
+        var panel = new PanelView { DataContext = model, Width = 420, Height = 108, ShowSessionRows = true };
+        Layout(panel);
+        return panel;
     }
 
     // State and full-screen screenshots use the default theme, in its own letter case.
