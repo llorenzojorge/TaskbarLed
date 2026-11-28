@@ -59,7 +59,7 @@ Release: push a tag `vX.Y.Z`; `.github/workflows/release.yml` builds, tests and 
 
 ## Status
 
-- Released: `v1.3.1` (Windows x64, framework-dependent, unsigned).
+- Released: `v1.4.0` (Windows x64, framework-dependent, unsigned; macOS preview packages for arm64 and x64, unsigned).
 - Versions: `MAJOR.MINOR.PATCH`. PATCH for fixes, MINOR for new features, and 2.0 only for a real new generation of the app. The tag is the version: the release workflow stamps it into the binaries and publishes a SHA-256 next to the zip. Local builds say `0.0.0-dev`. (v1.0.0 and v1.1.0 were built before this and say 1.0.0.)
 - Supported: Windows 10 and 11. Tested by hand only on the maintainer's Windows 11; Windows 10, a taskbar on another edge and ARM64 are not verified.
 - macOS: Preview tested on the contributor’s M2 with macOS 26.5.2, natively for arm64 and via Rosetta for x64. The maintainer has no Mac. See [the macOS guide](docs/MACOS.md) for requirements and differences.
