@@ -16,7 +16,7 @@ jobs:
       # Passed through the environment, never pasted into a script: a tag name is outside input.
       TAG: ${{ github.ref_name }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -54,7 +54,7 @@ jobs:
     env:
       TAG: ${{ github.ref_name }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-dotnet@v4
         with:
