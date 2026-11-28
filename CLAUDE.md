@@ -64,6 +64,38 @@ Release: push a tag `vX.Y.Z`; `.github/workflows/release.yml` builds, tests and 
 - Supported: Windows 10 and 11. Tested by hand only on the maintainer's Windows 11; Windows 10, a taskbar on another edge and ARM64 are not verified.
 - macOS: Preview tested on the contributor’s M2 with macOS 26.5.2, natively for arm64 and via Rosetta for x64. The maintainer has no Mac. See [the macOS guide](docs/MACOS.md) for requirements and differences.
 
+## Product rules (read before changing what users see)
+
+These are the maintainer's decisions about what TaskbarLed is. A pull request that breaks one is sent back, however good the code. When a change seems to need an exception, ask in the pull request first.
+
+**The idea.** A small panel that tells you what your agent is doing *while its app is out of sight*, and gets out of the way when you look at the app. Most users run one agent at a time: the default experience is built for them.
+
+**MUST NOT change by default** (a new behavior that touches one of these is an option, off by default):
+- When the panel shows: only while the session's app (Claude desktop, VS Code) is out of sight and there is something to show. Opening the app hides it.
+- The look: tabs (one per chat) plus the typed-out feed. Other layouts (a session list for sub-agents, a top bar) are a separate *panel style* the user picks, named by what it shows plus who it is for, for example "Tabs (default)" and "Session list (sub-agents)".
+- Where it sits: in the taskbar, at the user's saved spot. No feature moves it to another placement on its own.
+- The default theme (`ClaudeCode`), sound on, and the language the user picked.
+
+**Interaction:**
+- Clicks outside edit mode open things (a tab opens its session, the feed opens what finished). Moving and resizing happen **only in edit mode** (menu → Edit position and size / Edit position only), so a stray click never moves or resizes the panel.
+- In edit mode the panel can be dragged anywhere; where it is dropped sets the placement (`PanelLayout.MoveTo`: on the taskbar, just above it, or free). Escape restores everything.
+- A chat only opened and read, with no event for `IdleTabMinutes` (3), loses its tab until its next event (`PanelTabs.Shown`). Running, waiting and finished-but-unseen sessions always keep theirs.
+
+**Both platforms:**
+- Shared code (`Core`, `Sources.*`, the settings model, `src/TaskbarLed.App/Themes`) serves Windows and macOS. A Mac feature that needs a shared change keeps Windows' defaults identical, and the pull request says what Windows users see differently (ideally nothing) with `--render-demo` images.
+- A platform-only feature lives in that platform's app project. Do not reach into the other app's folder (no file links from `TaskbarLed.App` into `TaskbarLed.App.Avalonia` or back); put files both apps use in the neutral `assets/` folder at the repository root and link them from each project.
+
+**Themes:**
+- One definition per theme for both platforms: values only, in the `Led.*` keys documented at the top of `Matrix.xaml` and one line in `ThemeCatalog`. Most themes change colors and typography, not the layout.
+- Never branch on a theme id in code or XAML (`theme.Id == "LineMap"`). A theme that needs something different asks for it with a documented, optional key (for example a `Led.ShowRoutes` boolean or a `Led.RouteBrushes` list) that every other theme simply leaves out.
+- No colors written in panel XAML or code: every color comes from a `Led.*` resource.
+
+**Text and logic:**
+- Every word a user reads comes from `TickerStrings` (Core), `ActivityStrings` (ClaudeCode), `UiStrings` (App) or `MacUiStrings` (Avalonia), in English and Portuguese. Never `culture == "pt" ? "…" : "…"` in a view model.
+- Decisions (which sessions show, grouping, ordering, timers, countdowns, placement) go in Core as pure functions with sentence-named tests. App projects only wire them to windows.
+
+**Every pull request that adds an input or a reader** (a new hook kind, a file or process the app reads) updates `SECURITY.md` in the same pull request: what is read, from where, and that it is only displayed.
+
 ## Security rules
 
 The threat model and what users are promised are in [SECURITY.md](SECURITY.md); keep it true when behavior changes.

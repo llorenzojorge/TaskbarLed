@@ -95,7 +95,7 @@ public sealed class AppHost : IDisposable
             ClaudeCodeHookInstaller.DefaultSettingsPath, Path.Combine(AppContext.BaseDirectory, "TaskbarLed.Hook.exe"));
         _autoStart = new AutoStart("TaskbarLed", appPath);
 
-        _viewModel = new PanelViewModel(_strings.EditHint, _culture) { SaveLabel = _strings.Save, CancelLabel = _strings.Cancel };
+        _viewModel = new PanelViewModel(_strings.EditHint, _culture) { MoveHint = _strings.MoveHint, SaveLabel = _strings.Save, CancelLabel = _strings.Cancel };
         _panels = new PanelManager(_viewModel, _settings.Panel);
         _panels.OpenRequested += (_, _) => OpenClaude();
         _panels.TabOpenRequested += (_, id) => OpenTab(id);
@@ -202,7 +202,8 @@ public sealed class AppHost : IDisposable
 
         var sessions = _store.Snapshot();
         var now = DateTimeOffset.Now;
-        var frame = _composer.Compose(sessions, now);
+        // Chats that are only open (idle for a while) get no tab; any new event brings them back.
+        var frame = _composer.Compose(PanelTabs.Shown(sessions, now, TimeSpan.FromMinutes(_settings.Panel.IdleTabMinutes)), now);
         _selectedSessionId = frame.SelectedSessionId;
         _viewModel.Apply(frame);
         _tray?.SetStatus(sessions.Count == 0 ? SessionStatus.Idle : sessions.Max(s => s.Status));
@@ -474,10 +475,12 @@ public sealed class AppHost : IDisposable
         }
     }
 
-    private void BeginEditing()
+    /// <param name="resize">"Position and size": the width handle is shown. Otherwise only the position changes.</param>
+    private void BeginEditing(bool resize)
     {
         _editOrigin = _settings.Panel;
         _viewModel.Hint = null;
+        _viewModel.CanResize = resize;
         _viewModel.IsEditing = true;
         UpdateVisibility();
     }
@@ -557,17 +560,14 @@ public sealed class AppHost : IDisposable
     }
 
     private TrayCommands CreateTrayCommands() => new(
-        ToggleEditing: () =>
+        BeginEditing: resize =>
         {
-            if (_viewModel.IsEditing)
+            if (!_viewModel.IsEditing)
             {
-                FinishEditing(save: true);
-            }
-            else
-            {
-                BeginEditing();
+                BeginEditing(resize);
             }
         },
+        FinishEditing: () => FinishEditing(save: true),
         SelectMonitor: (mode, device) => UpdatePanel(_settings.Panel with { MonitorMode = mode, MonitorDeviceName = device }),
         SelectPlacement: placement => UpdatePanel(_settings.Panel with { Placement = placement }),
         SelectFullscreen: behavior => UpdatePanel(_settings.Panel with { Fullscreen = behavior }),

@@ -208,4 +208,75 @@ public class PanelLayoutTests
         Assert.Equal(1900, alert.Right);
         Assert.True(alert.Bottom < 1077, "alert stays above the edge glow");
     }
+
+    [Fact]
+    public void A_panel_dropped_on_the_taskbar_goes_into_the_taskbar()
+    {
+        var free = new PanelSettings { Placement = PanelPlacement.Free, FreePosition = new(300, 200, 420) };
+
+        var moved = PanelLayout.MoveTo(free, PixelRect.FromSize(700, 1030, 420, 36), Monitor, Taskbar, 1.0);
+
+        Assert.Equal(PanelPlacement.Taskbar, moved.Placement);
+        Assert.Equal(new PanelPosition(700, 0, 420), moved.TaskbarPosition);
+        Assert.Equal(new PanelPosition(300, 200, 420), moved.FreePosition); // Each mode keeps its own spot.
+    }
+
+    [Fact]
+    public void A_panel_dropped_just_above_the_taskbar_floats_above_it()
+    {
+        var moved = PanelLayout.MoveTo(InTaskbar(), PixelRect.FromSize(500, 980, 420, 36), Monitor, Taskbar, 1.0);
+
+        Assert.Equal(PanelPlacement.AboveTaskbar, moved.Placement);
+        Assert.Equal(500, moved.AbovePosition.X);
+        Assert.Equal(new PixelRect(500, 988, 920, 1024), PanelLayout.Compute(moved, Monitor, Taskbar, 1.0));
+    }
+
+    [Fact]
+    public void A_panel_dropped_higher_up_floats_freely_where_it_was_dropped()
+    {
+        var moved = PanelLayout.MoveTo(InTaskbar(), PixelRect.FromSize(640, 400, 420, 36), Monitor, Taskbar, 1.0);
+
+        Assert.Equal(PanelPlacement.Free, moved.Placement);
+        Assert.Equal(new PanelPosition(640, 400, 420), moved.FreePosition);
+    }
+
+    [Fact]
+    public void A_freely_dropped_panel_snaps_to_a_nearby_screen_edge()
+    {
+        var moved = PanelLayout.MoveTo(InTaskbar(), PixelRect.FromSize(7, 5, 420, 36), Monitor, Taskbar, 1.0);
+
+        Assert.Equal(new PanelPosition(0, 0, 420), moved.FreePosition);
+    }
+
+    [Theory]
+    [InlineData(1014, PanelPlacement.Taskbar)]      // middle at 1032: on the taskbar's top edge
+    [InlineData(1013, PanelPlacement.AboveTaskbar)] // middle at 1031: half over, mostly above
+    [InlineData(972, PanelPlacement.AboveTaskbar)]  // bottom at 1008: exactly 24 px above
+    [InlineData(971, PanelPlacement.Free)]          // bottom at 1007: past the band
+    public void Placement_follows_where_the_panel_is_dropped(int top, PanelPlacement expected)
+    {
+        var placement = PanelLayout.PlacementAt(PixelRect.FromSize(0, top, 420, 36), Monitor, Taskbar, 1.0);
+
+        Assert.Equal(expected, placement);
+    }
+
+    [Fact]
+    public void Without_a_usable_taskbar_every_drop_is_free()
+    {
+        var hidden = new PixelRect(0, 1078, 1920, 1126); // auto-hidden: only a sliver on screen
+
+        Assert.Equal(PanelPlacement.Free, PanelLayout.PlacementAt(PixelRect.FromSize(0, 1040, 420, 36), Monitor, hidden, 1.0));
+        Assert.Equal(PanelPlacement.Free, PanelLayout.PlacementAt(PixelRect.FromSize(0, 1040, 420, 36), Monitor, null, 1.0));
+    }
+
+    [Fact]
+    public void The_above_taskbar_band_scales_with_dpi()
+    {
+        var monitor = new PixelRect(0, 0, 3840, 2160);
+        var taskbar = new PixelRect(0, 2088, 3840, 2160);
+
+        // 30 px above the taskbar is inside the 24 DIP band at 150% (36 px), outside it at 100%.
+        Assert.Equal(PanelPlacement.AboveTaskbar, PanelLayout.PlacementAt(PixelRect.FromSize(0, 2004, 600, 54), monitor, taskbar, 1.5));
+        Assert.Equal(PanelPlacement.Free, PanelLayout.PlacementAt(PixelRect.FromSize(0, 2022, 600, 36), monitor, taskbar, 1.0));
+    }
 }

@@ -73,6 +73,56 @@ public static class PanelLayout
         return new PanelPosition(Math.Max(0, (rect.Left - anchorLeft) / scale), 0, width);
     }
 
+    /// <summary>
+    /// How far above the taskbar a dropped panel still counts as "above the taskbar", in DIP. Further up it
+    /// floats freely.
+    /// </summary>
+    public const double AboveTaskbarBandDip = 24;
+
+    /// <summary>
+    /// The placement a panel dragged to <paramref name="rect"/> belongs to: <see cref="PanelPlacement.Taskbar"/>
+    /// when its middle is on the taskbar, <see cref="PanelPlacement.AboveTaskbar"/> when its bottom is within
+    /// <see cref="AboveTaskbarBandDip"/> above it, otherwise <see cref="PanelPlacement.Free"/> (also whenever the
+    /// taskbar is hidden or not at the bottom).
+    /// </summary>
+    public static PanelPlacement PlacementAt(PixelRect rect, PixelRect monitor, PixelRect? taskbar, double scale)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(scale, 0);
+
+        if (UsableTaskbar(taskbar, monitor) is not { } bar)
+        {
+            return PanelPlacement.Free;
+        }
+
+        if ((rect.Top + rect.Bottom) / 2 >= bar.Top)
+        {
+            return PanelPlacement.Taskbar;
+        }
+
+        return rect.Bottom >= bar.Top - (int)Math.Round(AboveTaskbarBandDip * scale)
+            ? PanelPlacement.AboveTaskbar
+            : PanelPlacement.Free;
+    }
+
+    /// <summary>
+    /// Settings after the panel is dragged to <paramref name="rect"/> anywhere on the monitor: the placement is
+    /// picked from where it is (<see cref="PlacementAt"/>) and that placement's position is updated. A free
+    /// panel snaps to nearby edges. The other placements keep their remembered spots.
+    /// </summary>
+    public static PanelSettings MoveTo(PanelSettings settings, PixelRect rect, PixelRect monitor, PixelRect? taskbar, double scale)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+
+        var placement = PlacementAt(rect, monitor, taskbar, scale);
+        if (placement == PanelPlacement.Free)
+        {
+            rect = Snap(rect, monitor, taskbar, scale);
+        }
+
+        var moved = settings with { Placement = placement };
+        return moved.WithCurrentPosition(ToPosition(moved, rect, monitor, taskbar, scale)).Normalize();
+    }
+
     /// <summary>Pulls a dragged rectangle onto nearby monitor or taskbar edges.</summary>
     public static PixelRect Snap(PixelRect rect, PixelRect monitor, PixelRect? taskbar, double scale)
     {

@@ -5,10 +5,12 @@ namespace TaskbarLed.App.Infrastructure;
 /// <summary>Localizable UI text (menu, dialogs, hints). Add a language with one more factory.</summary>
 public sealed record UiStrings(
     string EditHint,
+    string MoveHint,
     string Save,
     string Cancel,
     string RightClickHint,
     string EditPosition,
+    string EditPositionOnly,
     string FinishEditing,
     string Placement,
     string PlacementTaskbar,
@@ -46,10 +48,12 @@ public sealed record UiStrings(
 {
     public static UiStrings English { get; } = new(
         EditHint: "Drag or resize",
+        MoveHint: "Drag to move",
         Save: "Save",
         Cancel: "Cancel",
         RightClickHint: "Right-click the panel to edit or change settings",
         EditPosition: "Edit position and size",
+        EditPositionOnly: "Edit position only",
         FinishEditing: "Finish editing",
         Placement: "Position",
         PlacementTaskbar: "On the taskbar",
@@ -87,10 +91,12 @@ public sealed record UiStrings(
 
     public static UiStrings Portuguese { get; } = new(
         EditHint: "Arraste ou redimensione",
+        MoveHint: "Arraste para mover",
         Save: "Salvar",
         Cancel: "Cancelar",
         RightClickHint: "Botão direito no painel para editar ou configurar",
         EditPosition: "Editar posição e tamanho",
+        EditPositionOnly: "Editar só a posição",
         FinishEditing: "Concluir edição",
         Placement: "Posição",
         PlacementTaskbar: "Na barra de tarefas",
